@@ -88,7 +88,7 @@ struct AccountView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 30)
-                    .padding(.bottom, .bottomInsets + 100)
+                    .padding(.bottom, .bottomInsets + 120)
                 }
             }
         }

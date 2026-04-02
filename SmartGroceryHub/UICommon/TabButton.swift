@@ -2,7 +2,7 @@
 //  TabButton.swift
 //  SmartGroceryHub
 //
-//  Created by Phạm Trường Giang on 24/2/25.
+//  Created by Phạm Trường Giang.
 //
 
 import SwiftUI
@@ -12,31 +12,40 @@ struct TabButton: View {
     @State var title: String = "Title"
     @State var icon: String = "store_tab"
     var isSelect: Bool = false
+    var animation: Namespace.ID
     var didSelect: (()->())
     
     var body: some View {
         Button{
-            debugPrint("Tab Button Tap")
             didSelect()
         } label: {
-            VStack{
+            VStack(spacing: 5) {
                 Image(icon)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 25, height: 25)
+                    .frame(width: 24, height: 24)
+                    .foregroundColor(isSelect ? .white : .secondaryText) 
                 
-                Text(title)
-                    .font(.custom("Times New Roman", size: 16))
+                if !isSelect {
+                    Text(title)
+                        .font(.customfont(.semibold, fontSize: 12))
+                        .foregroundColor(.secondaryText)
+                }
             }
-            
+            .padding(.vertical, 10)
+            .padding(.horizontal, 15)
+            .background(
+                ZStack {
+                    if isSelect {
+                        Capsule()
+                            .fill(Color.primaryApp)
+                            .matchedGeometryEffect(id: "TAB_INDICATOR", in: animation)
+                    }
+                }
+            )
         }
-        .foregroundColor(isSelect ? .primaryApp : .primaryText)
         .frame(minWidth: 0, maxWidth: .infinity)
-    }
-}
-
-#Preview {
-    TabButton{
-        print("Test")
+        .scaleEffect(isSelect ? 1.05 : 1.0)
+        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5), value: isSelect)
     }
 }
