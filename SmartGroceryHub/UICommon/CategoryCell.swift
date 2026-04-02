@@ -9,7 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct CategoryCell: View {
-    @State var tObj: TypeModel = TypeModel(dict: [ : ])
+    @State var tObj: TypeModel
     @State var color: Color = Color.yellow
     var didAddCart: ( ()->() )?
     
@@ -39,8 +39,9 @@ struct CategoryCell: View {
 }
 
 #Preview {
-    CategoryCell(tObj: TypeModel(dict: ["type_id": 1,
-                                        "type_name": "Pulses",
-                                        "image": "http://localhost:3001/img/type/202307261610181018aVOpgmY1W1.png",
-                                        "color": "F8A44C"]))
+    CategoryCell(tObj: TypeModel(id: "preview_1", data: [
+        "type_name": "Pulses",
+        "image": "",
+        "color": "F8A44C"
+    ]))
 }

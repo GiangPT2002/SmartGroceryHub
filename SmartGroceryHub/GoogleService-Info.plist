@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>144454028203-8mtbsnkb7t3fm32ef4paaq8bbplk1o39.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.144454028203-8mtbsnkb7t3fm32ef4paaq8bbplk1o39</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBbbEwdTufIkVTMX1jo6lUH93_tJOhhtL4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>144454028203</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>macOsByGiang.SmartGroceryHub</string>
+	<key>PROJECT_ID</key>
+	<string>smartgroceryhub-7fab0</string>
+	<key>STORAGE_BUCKET</key>
+	<string>smartgroceryhub-7fab0.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:144454028203:ios:85221e8b33c84bcebda0ee</string>
+</dict>
+</plist>

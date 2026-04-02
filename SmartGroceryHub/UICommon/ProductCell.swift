@@ -9,7 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 struct ProductCell: View {
     
-    @State var pObj: ProductModel = ProductModel(dict: [:])
+    @State var pObj: ProductModel
     var didAddCart: ( ()->() )?
     
     var body: some View {
@@ -60,19 +60,17 @@ struct ProductCell: View {
 }
 
 #Preview {
-    ProductCell(pObj: ProductModel(dict: ["prod_id": 6,
-                                          "cat_id": 1,
-                                          "brand_id": 1,
-                                          "type_id": 1,
-                                          "name": "Red Apple",
-                                          "detail": "Apples contain key nutrients, including fiber and antioxidants. They may offer health benefits, including lowering blood sugar levels and benefitting heart health.",
-                                          "unit_name": "kg",
-                                          "unit_value": "1",
-                                          "nutrition_weight": "182g",
-                                          "price": 1.99,
-                                          "image": "http://localhost:3001/img/product/202307310951365136W6nJvPCdzQ.png",
-                                          "cat_name": "Frash Fruits & Vegetable",
-                                          "type_name": "Pulses",
-                                          "is_fav": 1,
-                                          "avg_rating": 0]))
+    ProductCell(pObj: ProductModel(id: "preview_1", data: [
+        "name": "Red Apple",
+        "detail": "Apples contain key nutrients, including fiber and antioxidants.",
+        "unit_name": "kg",
+        "unit_value": "1",
+        "nutrition_weight": "182g",
+        "price": 1.99,
+        "image": "",
+        "cat_name": "Fresh Fruits & Vegetable",
+        "type_name": "Pulses",
+        "is_fav": false,
+        "avg_rating": 0
+    ]))
 }

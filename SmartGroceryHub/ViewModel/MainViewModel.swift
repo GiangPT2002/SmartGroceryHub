@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 class MainViewModel: ObservableObject {
     static var shared: MainViewModel = MainViewModel()
@@ -17,17 +18,24 @@ class MainViewModel: ObservableObject {
 
     @Published var showError = false
     @Published var errorMessage = ""
+    @Published var isLoading = false
     @Published var isUserLogin: Bool = false
-    @Published var userObj: UserModel = UserModel(dict: [:])
+    @Published var userObj: UserModel = UserModel()
     
+    private var authStateListener: AuthStateDidChangeListenerHandle?
     
     init() {
-        
-        if( Utils.UDValueBool(key: Globs.userLogin) ) {
-            // User Login
-            self.setUserData(uDict: Utils.UDValue(key: Globs.userPayload) as? NSDictionary ?? [:] )
-        }else{
-            // User Not Login
+        // Listen for Firebase Auth state changes
+        authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            DispatchQueue.main.async {
+                if let user = user {
+                    self?.userObj = UserModel(firebaseUser: user)
+                    self?.isUserLogin = true
+                } else {
+                    self?.userObj = UserModel()
+                    self?.isUserLogin = false
+                }
+            }
         }
         
         #if DEBUG
@@ -37,7 +45,14 @@ class MainViewModel: ObservableObject {
         #endif
     }
     
-    // ServiceCall
+    deinit {
+        if let listener = authStateListener {
+            Auth.auth().removeStateDidChangeListener(listener)
+        }
+    }
+    
+    // MARK: - Firebase Auth: Login
+    
     func serviceCallLogin() {
         
         if(!txtEmail.isValidEmail) {
@@ -52,24 +67,39 @@ class MainViewModel: ObservableObject {
             return
         }
         
-        ServiceCall.post(parameter: ["email": txtEmail, "password": txtPassword, "dervice_token":""], path: Globs.SV_LOGIN) { responseObj in
-            if let response = responseObj as? NSDictionary {
-                if response.value(forKey: KKey.status) as? String ?? "" == "1" {
-                    self.setUserData(uDict: response.value(forKey: KKey.payload) as? NSDictionary ?? [:])
-                } else {
-                    self.errorMessage = response.value(forKey: KKey.message) as? String ?? "Fail"
+        isLoading = true
+        
+        Task {
+            do {
+                let user = try await FirebaseService.shared.signIn(
+                    email: txtEmail,
+                    password: txtPassword
+                )
+                
+                // Fetch additional user data from Firestore
+                let userData = try await FirebaseService.shared.fetchUserData(uid: user.uid)
+                
+                await MainActor.run {
+                    self.userObj = UserModel(firebaseUser: user, userData: userData)
+                    self.isUserLogin = true
+                    self.isLoading = false
+                    self.clearInputFields()
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = self.firebaseErrorMessage(error)
                     self.showError = true
+                    self.isLoading = false
                 }
             }
-        } failure: { error in
-            self.errorMessage = error?.localizedDescription ?? "Fail"
-            self.showError = true
         }
     }
     
+    // MARK: - Firebase Auth: Sign Up
+    
     func serviceCallSignUp() {
         
-        if(txtUsername.isValidEmail) {
+        if(txtUsername.isEmpty) {
             self.errorMessage = "vui lòng nhập tên hợp lệ"
             self.showError = true
             return
@@ -87,34 +117,80 @@ class MainViewModel: ObservableObject {
             return
         }
         
-        ServiceCall.post(parameter: ["username": txtUsername , "email": txtEmail, "password": txtPassword, "dervice_token":""], path: Globs.SV_SIGN_UP) { responseObj in
-            if let response = responseObj as? NSDictionary {
-                if response.value(forKey: KKey.status) as? String ?? "" == "1" {
-                    self.setUserData(uDict: response.value(forKey: KKey.payload) as? NSDictionary ?? [:])
-                } else {
-                    self.errorMessage = response.value(forKey: KKey.message) as? String ?? "Fail"
+        if(txtPassword.count < 6) {
+            self.errorMessage = "mật khẩu phải có ít nhất 6 ký tự"
+            self.showError = true
+            return
+        }
+        
+        isLoading = true
+        
+        Task {
+            do {
+                let user = try await FirebaseService.shared.signUp(
+                    email: txtEmail,
+                    password: txtPassword,
+                    username: txtUsername
+                )
+                
+                await MainActor.run {
+                    self.userObj = UserModel(firebaseUser: user)
+                    self.isUserLogin = true
+                    self.isLoading = false
+                    self.clearInputFields()
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = self.firebaseErrorMessage(error)
                     self.showError = true
+                    self.isLoading = false
                 }
             }
-        } failure: { error in
-            self.errorMessage = error?.localizedDescription ?? "Fail"
+        }
+    }
+    
+    // MARK: - Sign Out
+    
+    func signOut() {
+        do {
+            try FirebaseService.shared.signOut()
+            self.userObj = UserModel()
+            self.isUserLogin = false
+        } catch {
+            self.errorMessage = "Không thể đăng xuất. Vui lòng thử lại."
             self.showError = true
         }
     }
     
-    func setUserData( uDict: NSDictionary ) {
-        
-        Utils.UDSET(data: uDict, key: Globs.userPayload)
-        Utils.UDSET(data: true, key: Globs.userLogin)
-        self.userObj = UserModel(dict: uDict)
-        self.isUserLogin = true
-        
+    // MARK: - Helpers
+    
+    private func clearInputFields() {
         self.txtUsername = ""
         self.txtEmail = ""
         self.txtPassword = ""
         self.isShowPassword = false
+    }
+    
+    private func firebaseErrorMessage(_ error: Error) -> String {
+        let nsError = error as NSError
         
+        switch nsError.code {
+        case AuthErrorCode.wrongPassword.rawValue:
+            return "Mật khẩu không đúng. Vui lòng thử lại."
+        case AuthErrorCode.invalidEmail.rawValue:
+            return "Địa chỉ email không hợp lệ."
+        case AuthErrorCode.emailAlreadyInUse.rawValue:
+            return "Email này đã được sử dụng. Vui lòng đăng nhập."
+        case AuthErrorCode.weakPassword.rawValue:
+            return "Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn."
+        case AuthErrorCode.userNotFound.rawValue:
+            return "Không tìm thấy tài khoản với email này."
+        case AuthErrorCode.networkError.rawValue:
+            return "Lỗi kết nối mạng. Vui lòng kiểm tra internet."
+        case AuthErrorCode.tooManyRequests.rawValue:
+            return "Quá nhiều yêu cầu. Vui lòng thử lại sau."
+        default:
+            return error.localizedDescription
+        }
     }
 }
-
-
