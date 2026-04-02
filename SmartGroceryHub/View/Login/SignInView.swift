@@ -2,152 +2,120 @@
 //  SignInView.swift
 //  SmartGroceryHub
 //
-//  Created by Phạm Trường Giang on 10/2/25.
+//  Created by Phạm Trường Giang.
 //
 
 import SwiftUI
-import CountryPicker
 
 struct SignInView: View {
     
-    @State var txtMobile: String = ""
-    @State var isShowPicker: Bool = false
-    @State var countryObj: Country?
-    
     var body: some View {
-        ZStack{
+        ZStack(alignment: .top) {
             
-            Image("bottom_bg")
-            .resizable()
-            .scaledToFill()
-            .frame(width: .screenWidth, height: .screenHeight)
-            
-            VStack{
-                Image("sign_in_top")
+            // Background Image
+            Image("sign_in_top")
                 .resizable()
                 .scaledToFill()
-                .frame(width: .screenWidth, height: .screenWidth)
-                
+                .frame(width: .screenWidth, height: .screenHeight * 0.55)
+                .clipped()
+            
+            // Bottom Gradient Overlay for readability
+            VStack {
                 Spacer()
+                LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.8)]), startPoint: .top, endPoint: .bottom)
+                    .frame(height: .screenHeight * 0.6)
             }
             
-            ScrollView{
+            // Content
+            VStack {
+                Spacer()
                 
-                VStack(alignment: .leading){
+                VStack(spacing: 20) {
+                    
+                    // Title
                     Text("Mua hàng cùng với\nSmart Grocery Hub")
-                        .font(.customfont(.semibold, fontSize: 26))
-                        .foregroundColor(.primaryText)
-                        .multilineTextAlignment(.leading)
-                        .padding(.bottom , 25)
+                        .font(.customfont(.bold, fontSize: 32))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
+                        .padding(.bottom, 20)
                     
-                    HStack{
-                        
-                        Button{
-                            isShowPicker = true
-                        } label: {
-                            //Image("")
-                            if let countryObj = countryObj {
-                                Text("\( countryObj.isoCode.getFlag() )")
-                                    .font(.customfont(.medium, fontSize: 35))
-                                Text("+\( countryObj.phoneCode )")
-                                    .font(.customfont(.medium, fontSize: 18))
-                                    .foregroundColor(.primaryText)
-                            }
-                            
-                        }
-                        
-                        TextField("Enter mobile", text: $txtMobile)
-                            .frame(minWidth: 0, maxWidth: .infinity)
-                    }
-                    
+                    // Email Sign In Button
                     NavigationLink {
                         LoginView()
                     } label: {
-                        Text("Continue with Email Sign In")
-                            .font(.customfont(.semibold, fontSize: 18))
+                        Text("Tiếp tục bằng Email")
+                            .font(.customfont(.bold, fontSize: 18))
                             .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .background(Color.primaryApp)
+                            .cornerRadius(20)
+                            .shadow(color: Color.primaryApp.opacity(0.3), radius: 10, x: 0, y: 5)
                     }
-                    .frame( minWidth: 0, maxWidth: .infinity, minHeight: 60, maxHeight: 60 )
-                    .background( Color(hex: "5383EC"))
-                    .cornerRadius(20)
-                    .padding(.bottom, 8 )
                     
-                    
+                    // Registration Link
                     NavigationLink {
                         SignUpView()
                     } label: {
-                        Text("Continue with Email Sign Up")
-                            .font(.customfont(.semibold, fontSize: 18))
+                        Text("Chưa có tài khoản? Đăng ký ngay")
+                            .font(.customfont(.semibold, fontSize: 16))
                             .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 10)
                     }
-                    .frame( minWidth: 0, maxWidth: .infinity, minHeight: 60, maxHeight: 60 )
-                    .background( Color.primaryApp)
-                    .cornerRadius(20)
-                    .padding(.bottom, 8 )
                     
-                    Divider()
-                        .padding(.bottom, 25)
-                    
-                    Text( "Hoặc đăng nhập với")
-                        .font(.custom("Times New Roman", size: 16))
-                        .foregroundColor(.textTitle)
-                        .multilineTextAlignment(.center)
-                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
-                        .padding(.bottom , 25)
-                    
-                    Button {
-                       
-                    } label: {
-                        
-                        Image("google_logo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                        
-                        Text("Continue with Google")
-                            .font(.customfont(.semibold, fontSize: 18))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
+                    // Divider
+                    HStack(spacing: 15) {
+                        Rectangle().fill(Color.white.opacity(0.3)).frame(height: 1)
+                        Text("Hoặc đăng nhập với")
+                            .font(.customfont(.medium, fontSize: 14))
+                            .foregroundColor(.white.opacity(0.8))
+                        Rectangle().fill(Color.white.opacity(0.3)).frame(height: 1)
                     }
-                    .frame( minWidth: 0, maxWidth: .infinity, minHeight: 60, maxHeight: 60 )
-                    .background( Color(hex: "5383EC"))
-                    .cornerRadius(20)
-                    .padding(.bottom, 8 )
+                    .padding(.vertical, 15)
                     
-                    
-                    Button {
-                       
-                    } label: {
+                    // Social Buttons (Glassmorphism)
+                    VStack(spacing: 15) {
+                        Button {
+                            // Google Login
+                        } label: {
+                            HStack(spacing: 15) {
+                                Image("google_logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 24, height: 24)
+                                Text("Continue with Google")
+                                    .font(.customfont(.semibold, fontSize: 18))
+                                    .foregroundColor(.white)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .background(.ultraThinMaterial) // Apple native glassmorphism
+                            .cornerRadius(20)
+                            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.2), lineWidth: 1))
+                        }
                         
-                        Image("fb_logo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-
-                        Text("Continue with Facebook")
-                            .font(.customfont(.semibold, fontSize: 18))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
+                        Button {
+                            // Facebook Login
+                        } label: {
+                            HStack(spacing: 15) {
+                                Image("fb_logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 24, height: 24)
+                                Text("Continue with Facebook")
+                                    .font(.customfont(.semibold, fontSize: 18))
+                                    .foregroundColor(.white)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(20)
+                            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.2), lineWidth: 1))
+                        }
                     }
-                    .frame( minWidth: 0, maxWidth: .infinity, minHeight: 60, maxHeight: 60 )
-                    .background( Color(hex: "4A66AC"))
-                    .cornerRadius(20)
-                        
                 }
-                .padding(.horizontal, 20)
-                .frame(width: .screenWidth, alignment: .leading)
-                .padding(.top, .topInsets +  .screenWidth * 0.6  )
+                .padding(.horizontal, 30)
+                .padding(.bottom, .bottomInsets + 40)
             }
-            
         }
-        .onAppear{
-            self.countryObj = Country(phoneCode: "84", isoCode: "VN")
-        }
-        .sheet(isPresented: $isShowPicker, content: {
-            CountryPickerUI(country: $countryObj)
-        })
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
@@ -158,3 +126,4 @@ struct SignInView: View {
 #Preview {
     SignInView()
 }
+
