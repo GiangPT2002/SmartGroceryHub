@@ -6,30 +6,38 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct UserModel: Identifiable, Equatable {
     
-    var id: Int = 0
+    var id: String = ""
     var username: String = ""
     var name: String = ""
     var email: String = ""
     var mobile: String = ""
     var mobileCode: String = ""
-    var authToken: String = ""
     
+    // Init from Firebase Auth User
+    init(firebaseUser: User, userData: [String: Any]? = nil) {
+        self.id = firebaseUser.uid
+        self.email = firebaseUser.email ?? ""
+        self.name = firebaseUser.displayName ?? ""
+        self.username = userData?["username"] as? String ?? firebaseUser.displayName ?? ""
+        self.mobile = userData?["mobile"] as? String ?? ""
+        self.mobileCode = userData?["mobile_code"] as? String ?? ""
+    }
     
-    init(dict: NSDictionary) {
-        self.id = dict.value(forKey: "user_id") as? Int ?? 0
-        self.username = dict.value(forKey: "username") as? String ?? ""
-        self.name = dict.value(forKey: "name") as? String ?? ""
-        self.email = dict.value(forKey: "email") as? String ?? ""
-        self.mobile = dict.value(forKey: "mobile") as? String ?? ""
-        self.mobileCode = dict.value(forKey: "mobile_code") as? String ?? ""
-        self.authToken = dict.value(forKey: "auth_token") as? String ?? ""
+    // Default empty init
+    init() {
+        self.id = ""
+        self.username = ""
+        self.name = ""
+        self.email = ""
+        self.mobile = ""
+        self.mobileCode = ""
     }
     
     static func == (lhs: UserModel, rhs: UserModel) -> Bool {
         return lhs.id == rhs.id
     }
 }
-

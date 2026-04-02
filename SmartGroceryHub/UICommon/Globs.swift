@@ -10,20 +10,14 @@ import SwiftUI
 struct Globs {
     static let AppName = "Smart Grocery Hub"
     
-    static let BASE_URL = "http://localhost:3001/api/app/"
-    
+    // UserDefaults keys
     static let userPayload = "user_payload"
     static let userLogin = "user_login"
     
-    static let SV_LOGIN = BASE_URL + "login"
-    static let SV_SIGN_UP = BASE_URL + "sign_up"
-    static let SV_HOME = BASE_URL + "home"
-}
-
-struct KKey {
-    static let status = "status"
-    static let message = "message"
-    static let payload = "payload"
+    // Firestore collection names
+    static let productsCollection = "products"
+    static let typesCollection = "types"
+    static let usersCollection = "users"
 }
 
 class Utils {

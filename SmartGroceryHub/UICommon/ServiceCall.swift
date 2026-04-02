@@ -2,91 +2,93 @@
 //  ServiceCall.swift
 //  SmartGroceryHub
 //
-//  Created by Phạm Trường Giang on 12/2/25.
+//  Migrated to Firebase by AI Assistant.
 //
 
 import SwiftUI
-import UIKit
+import FirebaseAuth
+import FirebaseFirestore
 
-class ServiceCall {
+class FirebaseService {
     
-    class func post(parameter: NSDictionary, path: String, isToken: Bool = false, withSuccess: @escaping ( (_ responseObj: AnyObject?) ->() ), failure: @escaping ( (_ error: Error?) ->() ) ) {
+    static let shared = FirebaseService()
+    private let db = Firestore.firestore()
+    
+    // MARK: - Auth
+    
+    func signIn(email: String, password: String) async throws -> User {
+        let result = try await Auth.auth().signIn(withEmail: email, password: password)
+        return result.user
+    }
+    
+    func signUp(email: String, password: String, username: String) async throws -> User {
+        let result = try await Auth.auth().createUser(withEmail: email, password: password)
+        let user = result.user
         
-        DispatchQueue.global(qos: .userInitiated).async {
-            
-            var parameterData = NSMutableData()
-            let dictKey = parameter.allKeys as! [String]
-            
-            var i=0;
-            
-            for dictKey in dictKey {
-                if let values = parameter.value(forKey: dictKey) as? String{
-                    parameterData.append(String.init(format: "%@%@=%@", i==0 ? "" : "&" ,dictKey, values.replacingOccurrences(of: "+", with: "%2B")).data(using: String.Encoding.utf8)!)
-                }else{
-                    parameterData.append(String.init(format: "%@%@=%@", i==0 ? "" : "&" ,dictKey, parameter.value(forKey: dictKey) as! CVarArg) .data(using: String.Encoding.utf8)!)
-                }
-                
-                i += 1
-            }
-            
-            var request = URLRequest(url: URL(string: path)!,timeoutInterval: 20)
-            request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-            
-            if(isToken) {
-                
-//                #if DEBUG
-//                request.addValue( "HFYsmcPickQlPmWMNUEZ" , forHTTPHeaderField: "access_token")
-//                #else
-                request.addValue( MainViewModel.shared.userObj.authToken , forHTTPHeaderField: "access_token")
-//                #endif
-                
-                               
-            }
-            
-            request.httpMethod = "POST"
-            request.httpBody = parameterData as Data
-            
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-              
-                if let error = error {
-                    DispatchQueue.main.async {
-                        failure(error)
-                    }
-                }else{
-                    
-                    if let data = data {
-                        do {
-                            let jsonDictionary = try JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? NSDictionary
-                            
-                            debugPrint("response: " , jsonDictionary )
-                            
-                            DispatchQueue.main.async {
-                                withSuccess(jsonDictionary)
-                            }
-                            
-                            
-                        }
-                        catch {
-                            DispatchQueue.main.async {
-                                failure(error)
-                            }
-                        }
-                    }
-                   
-                
-                }
-                
-              guard let data = data else {
-                
-                return
-              }
-              
-            }
-
-            task.resume()
+        // Save additional user data to Firestore
+        try await db.collection("users").document(user.uid).setData([
+            "username": username,
+            "name": username,
+            "email": email,
+            "mobile": "",
+            "mobile_code": "",
+            "created_at": FieldValue.serverTimestamp()
+        ])
         
+        // Update display name
+        let changeRequest = user.createProfileChangeRequest()
+        changeRequest.displayName = username
+        try await changeRequest.commitChanges()
+        
+        return user
+    }
+    
+    func signOut() throws {
+        try Auth.auth().signOut()
+    }
+    
+    // MARK: - Firestore: Home Data
+    
+    func fetchOfferProducts() async throws -> [ProductModel] {
+        let snapshot = try await db.collection("products")
+            .whereField("is_offer", isEqualTo: true)
+            .getDocuments()
+        
+        return snapshot.documents.map { doc in
+            ProductModel(id: doc.documentID, data: doc.data())
         }
     }
+    
+    func fetchBestSellProducts() async throws -> [ProductModel] {
+        let snapshot = try await db.collection("products")
+            .whereField("is_best_sell", isEqualTo: true)
+            .getDocuments()
+        
+        return snapshot.documents.map { doc in
+            ProductModel(id: doc.documentID, data: doc.data())
+        }
+    }
+    
+    func fetchAllProducts() async throws -> [ProductModel] {
+        let snapshot = try await db.collection("products")
+            .getDocuments()
+        
+        return snapshot.documents.map { doc in
+            ProductModel(id: doc.documentID, data: doc.data())
+        }
+    }
+    
+    func fetchTypes() async throws -> [TypeModel] {
+        let snapshot = try await db.collection("types")
+            .getDocuments()
+        
+        return snapshot.documents.map { doc in
+            TypeModel(id: doc.documentID, data: doc.data())
+        }
+    }
+    
+    func fetchUserData(uid: String) async throws -> [String: Any]? {
+        let doc = try await db.collection("users").document(uid).getDocument()
+        return doc.data()
+    }
 }
-
-
