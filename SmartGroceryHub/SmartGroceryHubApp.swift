@@ -12,6 +12,7 @@ import FirebaseCore
 struct SmartGroceryHubApp: App {
     
     @StateObject var mainVM = MainViewModel.shared
+    @AppStorage("hasSeenOnboarding") var hasSeenOnboarding: Bool = false
     
     init() {
         FirebaseApp.configure()
@@ -20,14 +21,14 @@ struct SmartGroceryHubApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationView {
-                
-                if mainVM.isUserLogin {
+                if !hasSeenOnboarding {
+                    OnboardingView()
+                } else if mainVM.isUserLogin {
                     MainTabView()
-                }else{
+                } else {
                     WelcomeView()
                 }
             }
-            
         }
     }
 }
