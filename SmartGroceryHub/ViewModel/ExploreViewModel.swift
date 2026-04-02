@@ -18,6 +18,8 @@ class ExploreViewModel: ObservableObject {
     @Published var showError = false
     @Published var isLoading = false
     
+    var firebaseService: FirebaseServiceProvider = FirebaseService.shared
+    
     init() {
         serviceCallList()
     }
@@ -26,7 +28,7 @@ class ExploreViewModel: ObservableObject {
         isLoading = true
         Task {
             do {
-                let types = try await FirebaseService.shared.fetchTypes()
+                let types = try await self.firebaseService.fetchTypes()
                 await MainActor.run {
                     self.typeArr = types
                     self.isLoading = false

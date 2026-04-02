@@ -24,7 +24,7 @@ struct MainTabView: View {
                 HomeView().tag(0)
                 ExploreView().tag(1)
                 CartView().tag(2)
-                ExploreView().tag(3)
+                FavoritesView().tag(3)
                 AccountView().tag(4)
             }
             .onAppear{

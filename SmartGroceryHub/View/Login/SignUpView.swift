@@ -30,47 +30,46 @@ struct SignUpView: View {
                         .padding(.bottom, .screenWidth * 0.0)
                     
                     Text("Đăng ký")
-                        .font(.custom("Times New Roman", size: 40))
+                        .font(.customfont(.bold, fontSize: 40))
                         .foregroundColor(.primaryText)
-                        .bold()
                         .padding(.bottom, 4)
                     Text("Nhập thông tin cá nhân của bạn")
-                        .font(.custom("Times New Roman", size: 16))
+                        .font(.customfont(.medium, fontSize: 16))
                         .foregroundColor(.secondaryText)
                         .padding(.bottom, .screenWidth * 0.1)
                     
                     LineTextField( title: "Họ và tên", placholder: "Nhập họ và tên của bạn", txt: $mainVM.txtUsername)
-                        .font(.custom("Times New Roman", size: 16))
+                        .font(.customfont(.medium, fontSize: 16))
                         .padding(.bottom, .screenWidth * 0.07)
                     
                     LineTextField( title: "Email", placholder: "Nhập email của bạn", txt: $mainVM.txtEmail, keyboardType: .emailAddress)
-                        .font(.custom("Times New Roman", size: 16))
+                        .font(.customfont(.medium, fontSize: 16))
                         .padding(.bottom, .screenWidth * 0.07)
                     
                     LineSecureField( title: "Mật khẩu", placholder: "Nhập mật khẩu của bạn", txt: $mainVM.txtPassword, isShowPassword: $mainVM.isShowPassword)
-                        .font(.custom("Times New Roman", size: 16))
+                        .font(.customfont(.medium, fontSize: 16))
                         .padding(.bottom, .screenWidth * 0.02)
                     
                     VStack {
                         Text("Để tiếp tục, bạn đồng ý với")
-                            .font(.custom("Times New Roman", size: 16))
+                            .font(.customfont(.medium, fontSize: 16))
                             .foregroundColor(.secondaryText)
                             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                         
                         HStack{
                             
                             Text("Điều khoản dịch vụ")
-                                .font(.custom("Times New Roman", size: 14))
+                                .font(.customfont(.medium, fontSize: 14))
                                 .foregroundColor(.primaryApp)
                                 
                             
                             Text("và")
-                                .font(.custom("Times New Roman", size: 14))
+                                .font(.customfont(.medium, fontSize: 14))
                                 .foregroundColor(.secondaryText)
                                 
                             
                             Text("Chính sách bảo mật của chúng tôi.")
-                                .font(.custom("Times New Roman", size: 14))
+                                .font(.customfont(.medium, fontSize: 14))
                                 .foregroundColor(.primaryApp)
                                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                                 
@@ -81,7 +80,7 @@ struct SignUpView: View {
                     RoundButton(title: "Đăng ký") {
                         mainVM.serviceCallSignUp()
                     }
-                    .font(.custom("Times New Roman", size: 16))
+                    .font(.customfont(.medium, fontSize: 16))
                     .padding(.bottom, .screenWidth * 0.05)
                     
                     NavigationLink {
@@ -89,11 +88,11 @@ struct SignUpView: View {
                     } label: {
                         HStack{
                             Text("Bạn đã có tài khoản?")
-                                .font(.custom("Times New Roman", size: 16))
+                                .font(.customfont(.medium, fontSize: 16))
                                 .foregroundColor(.primaryText)
                             
                             Text("Đăng nhập")
-                                .font(.custom("Times New Roman", size: 16))
+                                .font(.customfont(.semibold, fontSize: 16))
                                 .foregroundColor(.primaryApp)
                         }
                     }

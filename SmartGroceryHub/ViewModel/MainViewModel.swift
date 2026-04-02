@@ -22,6 +22,8 @@ class MainViewModel: ObservableObject {
     @Published var isUserLogin: Bool = false
     @Published var userObj: UserModel = UserModel()
     
+    var firebaseService: FirebaseServiceProvider = FirebaseService.shared
+    
     private var authStateListener: AuthStateDidChangeListenerHandle?
     
     init() {
@@ -71,13 +73,13 @@ class MainViewModel: ObservableObject {
         
         Task {
             do {
-                let user = try await FirebaseService.shared.signIn(
+                let user = try await self.firebaseService.signIn(
                     email: txtEmail,
                     password: txtPassword
                 )
                 
                 // Fetch additional user data from Firestore
-                let userData = try await FirebaseService.shared.fetchUserData(uid: user.uid)
+                let userData = try await self.firebaseService.fetchUserData(uid: user.uid)
                 
                 await MainActor.run {
                     self.userObj = UserModel(firebaseUser: user, userData: userData)
@@ -127,7 +129,7 @@ class MainViewModel: ObservableObject {
         
         Task {
             do {
-                let user = try await FirebaseService.shared.signUp(
+                let user = try await self.firebaseService.signUp(
                     email: txtEmail,
                     password: txtPassword,
                     username: txtUsername
@@ -153,7 +155,7 @@ class MainViewModel: ObservableObject {
     
     func signOut() {
         do {
-            try FirebaseService.shared.signOut()
+            try self.firebaseService.signOut()
             self.userObj = UserModel()
             self.isUserLogin = false
         } catch {

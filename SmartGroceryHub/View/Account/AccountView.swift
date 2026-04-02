@@ -13,7 +13,7 @@ struct AccountView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "F8F9FA").ignoresSafeArea() // Premium soft background
+            Color(hex: "F8F9FA").ignoresSafeArea()
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
@@ -35,9 +35,11 @@ struct AccountView: View {
                                     .font(.customfont(.bold, fontSize: 24))
                                     .foregroundColor(.primaryText)
                                 
-                                Image(systemName: "pencil")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.primaryApp)
+                                NavigationLink(destination: ProfileEditView()) {
+                                    Image(systemName: "pencil")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.primaryApp)
+                                }
                             }
                             
                             Text(mainVM.userObj.email.isEmpty ? "Chưa cung cấp email" : mainVM.userObj.email)
@@ -56,14 +58,23 @@ struct AccountView: View {
                     
                     // Menu Options
                     VStack(spacing: 0) {
-                        AccountRow(title: "Đơn hàng", icon: "bag")
-                        AccountRow(title: "Thông tin cá nhân", icon: "person.text.rectangle")
+                        NavigationLink(destination: OrderHistoryView()) {
+                            AccountRow(title: "Đơn hàng", icon: "bag")
+                        }
+                        
+                        NavigationLink(destination: ProfileEditView()) {
+                            AccountRow(title: "Thông tin cá nhân", icon: "person.text.rectangle")
+                        }
+                        
                         AccountRow(title: "Địa chỉ giao hàng", icon: "map")
                         AccountRow(title: "Phương thức thanh toán", icon: "creditcard")
                         AccountRow(title: "Mã khuyến mãi", icon: "ticket")
                         AccountRow(title: "Thông báo", icon: "bell")
                         AccountRow(title: "Trợ giúp", icon: "questionmark.circle")
-                        AccountRow(title: "Giới thiệu", icon: "info.circle")
+                        
+                        NavigationLink(destination: AboutView()) {
+                            AccountRow(title: "Giới thiệu", icon: "info.circle")
+                        }
                     }
                     .background(Color.white)
                     .cornerRadius(20)
