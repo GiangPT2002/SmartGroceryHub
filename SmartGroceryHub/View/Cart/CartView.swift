@@ -82,7 +82,7 @@ struct CartView: View {
                         .cornerRadius(20)
                     }
                     .padding(.horizontal, 20)
-                    .padding(.bottom, .bottomInsets + 90)
+                    .padding(.bottom, .bottomInsets + 120)
                 }
             }
         }

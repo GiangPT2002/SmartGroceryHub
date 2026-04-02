@@ -24,8 +24,6 @@ struct HomeView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 25) {
                         
-                        Spacer().frame(height: 155)
-                        
                         Image("banner_top")
                             .resizable()
                             .scaledToFill()
@@ -117,7 +115,7 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .padding(.bottom, .bottomInsets + 60)
+                    .padding(.bottom, .bottomInsets + 120) // Increased padding to clear floating TabBar
                 }
                 .refreshable {
                     // Pull to refresh feature
@@ -125,50 +123,50 @@ struct HomeView: View {
                     // Add slight delay for animation smoothness if it loads too fast
                     try? await Task.sleep(nanoseconds: 500_000_000)
                 }
-            }
-            
-            // Premium Floating Blur Header
-            VStack(spacing: 15) {
-                // Header Logo & Location
-                HStack {
-                    Image("app_logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30)
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 5) {
-                        Image("location") // Ensure this asset exists
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 16, height: 16)
+                .safeAreaInset(edge: .top) {
+                    VStack(spacing: 15) {
+                        // Header Logo & Location
+                        HStack {
+                            Image("app_logo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 30, height: 30) // Fixed aspect ratio
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 5) {
+                                Image("location") // Ensure this asset exists
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 16, height: 16)
+                                
+                                Text(locationManager.currentAddress)
+                                    .font(.customfont(.semibold, fontSize: 16))
+                                    .foregroundColor(.darkGray)
+                                    .lineLimit(1)
+                            }
+                            
+                            Spacer()
+                            
+                            // Invisible view for symmetry spacing
+                            Color.clear.frame(width: 30, height: 30)
+                        }
+                        .padding(.horizontal, 20)
                         
-                        Text(locationManager.currentAddress)
-                            .font(.customfont(.semibold, fontSize: 16))
-                            .foregroundColor(.darkGray)
-                            .lineLimit(1)
+                        // Search Bar integrated into Header
+                        SearchTextField(placholder: "Tìm kiếm sản phẩm", txt: $homeVM.txtSearch)
+                            .padding(.horizontal, 20)
                     }
-                    
-                    Spacer()
-                    
-                    // Invisible view for symmetry spacing
-                    Color.clear.frame(width: 30, height: 30)
+                    .padding(.top, 10)
+                    .padding(.bottom, 15)
+                    .background(
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .ignoresSafeArea(.all, edges: .top)
+                            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
+                    )
                 }
-                .padding(.horizontal, 20)
-                
-                // Search Bar integrated into Header
-                SearchTextField(placholder: "Tìm kiếm sản phẩm", txt: $homeVM.txtSearch)
-                    .padding(.horizontal, 20)
             }
-            .padding(.bottom, 15)
-            .padding(.top, .topInsets + 5)
-            .background(
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .ignoresSafeArea(.all, edges: .top)
-                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
-            )
         }
         .ignoresSafeArea(.all, edges: .top)
     }

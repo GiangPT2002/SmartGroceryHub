@@ -41,7 +41,7 @@ struct ExploreView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
-                    .padding(.top, .topInsets + 100)
+                    .padding(.top, 20) // Normal padding, no topInsets manual space needed
                     .padding(.bottom, 10)
                     
                     HStack(alignment: .top, spacing: 15) {
@@ -57,22 +57,23 @@ struct ExploreView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.bottom, .bottomInsets + 60)
+                    .padding(.bottom, .bottomInsets + 120)
+                }
+                .safeAreaInset(edge: .top) {
+                    VStack {
+                        SearchTextField(placholder: "Bạn cần tìm gì hôm nay?", txt: $expVM.txtSearch)
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 15)
+                            .padding(.top, 10)
+                    }
+                    .background(
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .ignoresSafeArea(.all, edges: .top)
+                            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
+                    )
                 }
             }
-            
-            VStack {
-                SearchTextField(placholder: "Bạn cần tìm gì hôm nay?", txt: $expVM.txtSearch)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 15)
-                    .padding(.top, .topInsets + 10)
-            }
-            .background(
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .ignoresSafeArea(.all, edges: .top)
-                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
-            )
         }
         .ignoresSafeArea(.all, edges: .top)
     }
