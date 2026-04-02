@@ -17,9 +17,9 @@ struct MainTabView: View {
             TabView(selection: $homeVM.selectTab){
                 HomeView().tag(0)
                 ExploreView().tag(1)
-                ExploreView().tag(2)
+                CartView().tag(2)
                 ExploreView().tag(3)
-                ExploreView().tag(4)
+                AccountView().tag(4)
             }
             .onAppear{
                 UIScrollView.appearance().isScrollEnabled = false

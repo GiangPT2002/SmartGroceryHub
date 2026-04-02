@@ -9,35 +9,33 @@ import SwiftUI
 
 struct SearchTextField: View {
    
-    @State var placholder: String = "Placholder"
+    @State var placholder: String = "Tìm kiếm"
     @Binding var txt: String
-    
     
     var body: some View {
         HStack(spacing: 15) {
            
-            Image("search")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 12, height: 12)
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.placeholder)
            
             TextField(placholder, text: $txt)
-                .font(.custom("Times New Roman", size: 17))
+                .font(.customfont(.semibold, fontSize: 16))
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
                 .frame(minWidth: 0, maxWidth: .infinity)
         }
-        .frame(height: 30)
+        .frame(height: 35)
         .padding(15)
         .background(Color(hex: "F2F3F2"))
-        .cornerRadius(16)
+        .cornerRadius(18)
     }
 }
 
 struct SearchTextField_Previews: PreviewProvider {
     @State static var txt: String = ""
     static var previews: some View {
-        SearchTextField(placholder: "Search Store", txt: $txt)
+        SearchTextField(placholder: "Tìm kiếm sản phẩm", txt: $txt)
             .padding(15)
     }
 }

@@ -10,11 +10,10 @@ import SDWebImageSwiftUI
 
 struct CategoryCell: View {
     @State var tObj: TypeModel
-    @State var color: Color = Color.yellow
     var didAddCart: ( ()->() )?
     
     var body: some View {
-        HStack{
+        HStack(spacing: 15) {
             
             WebImage(url: URL(string: tObj.image ))
                 .resizable()
@@ -22,26 +21,30 @@ struct CategoryCell: View {
                 .transition(.fade(duration: 0.5))
                 .scaledToFit()
                 .frame(width: 70, height: 70)
-            
+                .padding(.leading, 15)
             
             Text(tObj.name)
-                .font(.custom("Times New Roman", size: 16))
+                .font(.customfont(.bold, fontSize: 18))
                 .foregroundColor(.primaryText)
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
             
-            
         }
-        .padding(15)
         .frame(width: 250, height: 100)
-        .background(tObj.color.opacity(0.3))
-        .cornerRadius(16)
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(tObj.color.opacity(0.15))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(tObj.color.opacity(0.5), lineWidth: 1)
+        )
     }
 }
 
 #Preview {
     CategoryCell(tObj: TypeModel(id: "preview_1", data: [
-        "type_name": "Pulses",
-        "image": "",
+        "type_name": "Trái cây nhập",
+        "image": "https://www.apple.com/v/apple-fresh/a/images/meta/oh-snap_overview__c92c4o82rtmu_og.png",
         "color": "F8A44C"
     ]))
 }
