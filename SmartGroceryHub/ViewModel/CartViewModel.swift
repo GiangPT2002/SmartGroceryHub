@@ -37,6 +37,17 @@ class CartViewModel: ObservableObject {
         saveCart()
     }
     
+    func addToCartWithQty(product: ProductModel, qty: Int) {
+        if let index = cartItems.firstIndex(where: { $0.product.id == product.id }) {
+            cartItems[index].qty += qty
+        } else {
+            var item = CartItemModel(product: product)
+            item.qty = qty
+            cartItems.append(item)
+        }
+        saveCart()
+    }
+    
     func removeFromCart(item: CartItemModel) {
         cartItems.removeAll { $0.id == item.id }
         saveCart()

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CartView: View {
     @StateObject var cartVM = CartViewModel.shared
+    @State private var showCheckoutConfirm = false
     
     var body: some View {
         ZStack {
@@ -45,12 +46,17 @@ struct CartView: View {
                     ScrollView(showsIndicators: false) {
                         LazyVStack(spacing: 15) {
                             ForEach(cartVM.cartItems) { item in
-                                CartItemRow(item: item)
+                                CartItemRow(itemId: item.id)
+                                    .transition(.asymmetric(
+                                        insertion: .scale.combined(with: .opacity),
+                                        removal: .slide.combined(with: .opacity)
+                                    ))
                             }
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 20)
-                        .padding(.bottom, 120) // Space for checkout button
+                        .padding(.bottom, 150)
+                        .animation(.easeInOut(duration: 0.3), value: cartVM.cartItems.count)
                     }
                 }
             }
@@ -59,36 +65,65 @@ struct CartView: View {
             if !cartVM.cartItems.isEmpty {
                 VStack {
                     Spacer()
-                    Button {
-                        cartVM.checkout()
-                    } label: {
+                    
+                    // Item summary
+                    VStack(spacing: 12) {
                         HStack {
-                            Text("Thanh toán")
-                                .font(.customfont(.bold, fontSize: 18))
-                                .foregroundColor(.white)
+                            Text("\(cartVM.cartItems.count) sản phẩm")
+                                .font(.customfont(.medium, fontSize: 15))
+                                .foregroundColor(.secondaryText)
                             Spacer()
-                            Text("\(cartVM.totalPrice, specifier: "%.0f")đ")
-                                .font(.customfont(.bold, fontSize: 14))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.black.opacity(0.2))
-                                .cornerRadius(8)
+                            Text("Tổng cộng")
+                                .font(.customfont(.medium, fontSize: 15))
+                                .foregroundColor(.secondaryText)
                         }
-                        .padding(.horizontal, 20)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 60)
-                        .background(Color.primaryApp)
-                        .cornerRadius(20)
+                        
+                        Button {
+                            showCheckoutConfirm = true
+                        } label: {
+                            HStack {
+                                Text("Thanh toán")
+                                    .font(.customfont(.bold, fontSize: 18))
+                                    .foregroundColor(.white)
+                                Spacer()
+                                Text("\(cartVM.totalPrice, specifier: "%.0f")đ")
+                                    .font(.customfont(.bold, fontSize: 16))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.black.opacity(0.2))
+                                    .cornerRadius(10)
+                            }
+                            .padding(.horizontal, 20)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 60)
+                            .background(Color.primaryApp)
+                            .cornerRadius(20)
+                        }
                     }
                     .padding(.horizontal, 20)
+                    .padding(.top, 15)
                     .padding(.bottom, .bottomInsets + 120)
+                    .background(
+                        Color.white
+                            .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: -5)
+                    )
                 }
             }
         }
         .ignoresSafeArea()
-        .alert(isPresented: $cartVM.showCheckoutSuccess) {
-            Alert(title: Text("Thành công"), message: Text("Đơn hàng của bạn đã được đặt thành công!"), dismissButton: .default(Text("OK")))
+        .alert("Xác nhận thanh toán", isPresented: $showCheckoutConfirm) {
+            Button("Hủy", role: .cancel) { }
+            Button("Thanh toán") {
+                cartVM.checkout()
+            }
+        } message: {
+            Text("Bạn có chắc muốn thanh toán \(cartVM.cartItems.count) sản phẩm với tổng \(cartVM.totalPrice, specifier: "%.0f")đ?")
+        }
+        .alert("Đặt hàng thành công! 🎉", isPresented: $cartVM.showCheckoutSuccess) {
+            Button("OK") { }
+        } message: {
+            Text("Đơn hàng của bạn đã được ghi nhận. Bạn có thể theo dõi đơn hàng tại mục Tài khoản > Đơn hàng.")
         }
     }
 }

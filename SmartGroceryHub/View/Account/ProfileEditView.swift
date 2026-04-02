@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct ProfileEditView: View {
     @Environment(\.presentationMode) var mode: Binding<PresentationMode>
@@ -14,6 +16,9 @@ struct ProfileEditView: View {
     @State private var editName: String = ""
     @State private var editEmail: String = ""
     @State private var showSaved: Bool = false
+    @State private var isSaving: Bool = false
+    @State private var showError: Bool = false
+    @State private var errorMsg: String = ""
     
     var body: some View {
         ZStack {
@@ -57,7 +62,7 @@ struct ProfileEditView: View {
                                 .frame(width: 100, height: 100)
                                 .foregroundColor(.primaryApp)
                             
-                            Text(mainVM.userObj.username.isEmpty ? "Người dùng" : mainVM.userObj.username)
+                            Text(editName.isEmpty ? "Người dùng" : editName)
                                 .font(.customfont(.bold, fontSize: 22))
                                 .foregroundColor(.primaryText)
                         }
@@ -66,21 +71,47 @@ struct ProfileEditView: View {
                         // Fields
                         VStack(spacing: 20) {
                             ProfileField(title: "Họ và tên", value: $editName, icon: "person")
-                            ProfileField(title: "Email", value: $editEmail, icon: "envelope")
+                            
+                            // Email is read-only (Firebase Auth email)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Email")
+                                    .font(.customfont(.semibold, fontSize: 15))
+                                    .foregroundColor(.secondaryText)
+                                
+                                HStack(spacing: 12) {
+                                    Image(systemName: "envelope")
+                                        .font(.system(size: 18))
+                                        .foregroundColor(.primaryApp)
+                                        .frame(width: 24)
+                                    
+                                    Text(editEmail)
+                                        .font(.customfont(.medium, fontSize: 17))
+                                        .foregroundColor(.secondaryText)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "lock.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.placeholder)
+                                }
+                                .padding(16)
+                                .background(Color(hex: "F5F5F5"))
+                                .cornerRadius(16)
+                            }
                         }
                         .padding(.horizontal, 20)
                         
                         // Save button
                         Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                showSaved = true
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                showSaved = false
-                            }
+                            saveProfile()
                         } label: {
                             HStack {
-                                if showSaved {
+                                if isSaving {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.9)
+                                    Text("Đang lưu...")
+                                } else if showSaved {
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.system(size: 20))
                                     Text("Đã lưu!")
@@ -92,12 +123,19 @@ struct ProfileEditView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 60)
-                            .background(showSaved ? Color(hex: "27AE60") : Color.primaryApp)
+                            .background(
+                                showSaved ? Color(hex: "27AE60") :
+                                isSaving ? Color.gray :
+                                Color.primaryApp
+                            )
                             .cornerRadius(20)
                         }
+                        .disabled(isSaving || editName.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .opacity(editName.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1.0)
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
                     }
+                    .padding(.bottom, 40)
                 }
             }
         }
@@ -108,6 +146,63 @@ struct ProfileEditView: View {
         .onAppear {
             editName = mainVM.userObj.username
             editEmail = mainVM.userObj.email
+        }
+        .alert(isPresented: $showError) {
+            Alert(title: Text("Lỗi"), message: Text(errorMsg), dismissButton: .default(Text("OK")))
+        }
+    }
+    
+    // MARK: - Actually save to Firestore
+    
+    private func saveProfile() {
+        let trimmedName = editName.trimmingCharacters(in: .whitespaces)
+        guard !trimmedName.isEmpty else { return }
+        guard let userId = Auth.auth().currentUser?.uid else {
+            errorMsg = "Chưa đăng nhập"
+            showError = true
+            return
+        }
+        
+        isSaving = true
+        
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).updateData([
+            "username": trimmedName
+        ]) { error in
+            DispatchQueue.main.async {
+                self.isSaving = false
+                
+                if let error = error {
+                    // If document doesn't exist, create it
+                    db.collection("users").document(userId).setData([
+                        "username": trimmedName,
+                        "email": self.editEmail
+                    ], merge: true) { setError in
+                        DispatchQueue.main.async {
+                            if let setError = setError {
+                                self.errorMsg = setError.localizedDescription
+                                self.showError = true
+                            } else {
+                                self.completeSave(name: trimmedName)
+                            }
+                        }
+                    }
+                } else {
+                    self.completeSave(name: trimmedName)
+                }
+            }
+        }
+    }
+    
+    private func completeSave(name: String) {
+        // Update local model
+        mainVM.userObj.username = name
+        
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            showSaved = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            showSaved = false
         }
     }
 }

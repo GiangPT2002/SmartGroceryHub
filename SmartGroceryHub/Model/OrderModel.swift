@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseFirestore
 
 struct OrderModel: Identifiable {
     var id: String = UUID().uuidString
@@ -54,7 +55,7 @@ struct OrderModel: Identifiable {
             self.status = OrderStatus(rawValue: statusStr) ?? .placed
         }
         
-        if let timestamp = data["created_at"] as? FirebaseFirestore.Timestamp {
+        if let timestamp = data["created_at"] as? Timestamp {
             self.createdAt = timestamp.dateValue()
         }
         
@@ -78,5 +79,3 @@ struct OrderItemData: Identifiable {
         self.qty = data["qty"] as? Int ?? 1
     }
 }
-
-import FirebaseFirestore

@@ -222,9 +222,7 @@ struct ProductDetailView: View {
                 
                 Button {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                        for _ in 0..<qty {
-                            cartVM.addToCart(product: product)
-                        }
+                        cartVM.addToCartWithQty(product: product, qty: qty)
                         addedToCart = true
                     }
                     
