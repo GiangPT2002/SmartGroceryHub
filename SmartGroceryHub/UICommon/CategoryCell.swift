@@ -9,38 +9,40 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct CategoryCell: View {
-    @State var tObj: TypeModel
-    @State var color: Color = Color.yellow
-    var didAddCart: ( ()->() )?
+    var tObj: TypeModel
+    var didAddCart: (() -> ())?
     
     var body: some View {
-        HStack{
-            
-            WebImage(url: URL(string: tObj.image ))
+        HStack(spacing: AppSpacing.md) {
+            WebImage(url: URL(string: tObj.image))
                 .resizable()
-                .indicator(.activity) // Activity Indicator
+                .indicator(.activity)
                 .transition(.fade(duration: 0.5))
                 .scaledToFit()
-                .frame(width: 70, height: 70)
-            
+                .frame(width: 65, height: 65)
+                .padding(.leading, AppSpacing.md)
             
             Text(tObj.name)
-                .font(.custom("Times New Roman", size: 16))
-                .foregroundColor(.primaryText)
+                .font(AppTypography.headline(.bold))
+                .foregroundColor(AppColors.textPrimary)
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            
-            
         }
-        .padding(15)
-        .frame(width: 250, height: 100)
-        .background(tObj.color.opacity(0.3))
-        .cornerRadius(16)
+        .frame(width: 240, height: 95)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.lg)
+                .fill(tObj.surfaceColor)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.lg)
+                .stroke(tObj.borderColor, lineWidth: 1)
+        )
+        .shadow(color: tObj.color.opacity(0.1), radius: 4, x: 0, y: 2)
     }
 }
 
 #Preview {
     CategoryCell(tObj: TypeModel(id: "preview_1", data: [
-        "type_name": "Pulses",
+        "type_name": "Trái cây nhập",
         "image": "",
         "color": "F8A44C"
     ]))

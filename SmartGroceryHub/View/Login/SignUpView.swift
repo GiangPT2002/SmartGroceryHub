@@ -9,129 +9,114 @@ import SwiftUI
 
 struct SignUpView: View {
     
-    @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    @StateObject var mainVM = MainViewModel.shared;
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var mainVM: MainViewModel
     
     var body: some View {
-        
-        ZStack{
-            
+        ZStack {
             Image("bottom_bg")
                 .resizable()
                 .scaledToFill()
                 .frame(width: .screenWidth, height: .screenHeight)
             
-            ScrollView{
-                VStack{
+            ScrollView(showsIndicators: false) {
+                VStack {
                     Image("app_logo")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 100)
-                        .padding(.bottom, .screenWidth * 0.0)
+                        .frame(width: 80)
+                        .padding(.bottom, AppSpacing.xs)
                     
                     Text("Đăng ký")
-                        .font(.custom("Times New Roman", size: 40))
-                        .foregroundColor(.primaryText)
-                        .bold()
-                        .padding(.bottom, 4)
+                        .font(AppTypography.largeTitle(.bold))
+                        .foregroundColor(AppColors.textPrimary)
+                        .padding(.bottom, AppSpacing.xxs)
+                    
                     Text("Nhập thông tin cá nhân của bạn")
-                        .font(.custom("Times New Roman", size: 16))
-                        .foregroundColor(.secondaryText)
-                        .padding(.bottom, .screenWidth * 0.1)
+                        .font(AppTypography.body())
+                        .foregroundColor(AppColors.textSecondary)
+                        .padding(.bottom, AppSpacing.xxl)
                     
-                    LineTextField( title: "Họ và tên", placholder: "Nhập họ và tên của bạn", txt: $mainVM.txtUsername)
-                        .font(.custom("Times New Roman", size: 16))
-                        .padding(.bottom, .screenWidth * 0.07)
+                    LineTextField(title: "Họ và tên", placholder: "Nhập họ và tên của bạn", txt: $mainVM.txtUsername)
+                        .padding(.bottom, AppSpacing.xl)
                     
-                    LineTextField( title: "Email", placholder: "Nhập email của bạn", txt: $mainVM.txtEmail, keyboardType: .emailAddress)
-                        .font(.custom("Times New Roman", size: 16))
-                        .padding(.bottom, .screenWidth * 0.07)
+                    LineTextField(title: "Email", placholder: "Nhập email của bạn", txt: $mainVM.txtEmail, keyboardType: .emailAddress)
+                        .padding(.bottom, AppSpacing.xl)
                     
-                    LineSecureField( title: "Mật khẩu", placholder: "Nhập mật khẩu của bạn", txt: $mainVM.txtPassword, isShowPassword: $mainVM.isShowPassword)
-                        .font(.custom("Times New Roman", size: 16))
-                        .padding(.bottom, .screenWidth * 0.02)
+                    LineSecureField(title: "Mật khẩu", placholder: "Nhập mật khẩu của bạn", txt: $mainVM.txtPassword, isShowPassword: $mainVM.isShowPassword)
+                        .padding(.bottom, AppSpacing.sm)
                     
-                    VStack {
+                    VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text("Để tiếp tục, bạn đồng ý với")
-                            .font(.custom("Times New Roman", size: 16))
-                            .foregroundColor(.secondaryText)
-                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                            .font(AppTypography.callout())
+                            .foregroundColor(AppColors.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        HStack{
-                            
+                        HStack(spacing: 0) {
                             Text("Điều khoản dịch vụ")
-                                .font(.custom("Times New Roman", size: 14))
-                                .foregroundColor(.primaryApp)
-                                
-                            
-                            Text("và")
-                                .font(.custom("Times New Roman", size: 14))
-                                .foregroundColor(.secondaryText)
-                                
-                            
-                            Text("Chính sách bảo mật của chúng tôi.")
-                                .font(.custom("Times New Roman", size: 14))
-                                .foregroundColor(.primaryApp)
-                                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                                
+                                .font(AppTypography.subheadline(.medium))
+                                .foregroundColor(AppColors.primary)
+                            Text(" và ")
+                                .font(AppTypography.subheadline(.medium))
+                                .foregroundColor(AppColors.textSecondary)
+                            Text("Chính sách bảo mật.")
+                                .font(AppTypography.subheadline(.medium))
+                                .foregroundColor(AppColors.primary)
                         }
-                        .padding(.bottom, .screenWidth * 0.02)
                     }
+                    .padding(.bottom, AppSpacing.lg)
                     
-                    RoundButton(title: "Đăng ký") {
+                    Button {
                         mainVM.serviceCallSignUp()
+                    } label: {
+                        Text("Đăng ký")
                     }
-                    .font(.custom("Times New Roman", size: 16))
-                    .padding(.bottom, .screenWidth * 0.05)
+                    .buttonStyle(PrimaryButtonStyle(isLoading: mainVM.isLoading))
+                    .disabled(mainVM.isLoading)
+                    .padding(.bottom, AppSpacing.lg)
                     
                     NavigationLink {
                         LoginView()
                     } label: {
-                        HStack{
+                        HStack {
                             Text("Bạn đã có tài khoản?")
-                                .font(.custom("Times New Roman", size: 16))
-                                .foregroundColor(.primaryText)
-                            
+                                .font(AppTypography.body())
+                                .foregroundColor(AppColors.textPrimary)
                             Text("Đăng nhập")
-                                .font(.custom("Times New Roman", size: 16))
-                                .foregroundColor(.primaryApp)
+                                .font(AppTypography.body(.semibold))
+                                .foregroundColor(AppColors.primary)
                         }
                     }
                     
                     Spacer()
-                    
                 }
                 .padding(.top, .topInsets + 64)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, AppSpacing.lg)
                 .padding(.bottom, .bottomInsets)
             }
             
-            
-            VStack{
-                
-                HStack{
-                    Button{
-                        mode.wrappedValue.dismiss()
+            VStack {
+                HStack {
+                    Button {
+                        dismiss()
                     } label: {
-                        Image("back")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 25, height: 25)
+                        Image(systemName: AppIcons.back)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(AppColors.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(AppColors.surface.opacity(0.8))
+                            .cornerRadius(AppRadius.sm)
                     }
-                    
                     Spacer()
-                    
                 }
-                
                 Spacer()
             }
             .padding(.top, .topInsets)
-            .padding(.horizontal, 20)
-            
+            .padding(.horizontal, AppSpacing.lg)
         }
-        .alert(isPresented: $mainVM.showError, content: {
-            Alert(title: Text(Globs.AppName), message: Text(mainVM.errorMessage) , dismissButton: .default(Text("Ok")))
-        })
+        .alert(isPresented: $mainVM.showError) {
+            Alert(title: Text(Globs.AppName), message: Text(mainVM.errorMessage), dismissButton: .default(Text("OK")))
+        }
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
@@ -141,4 +126,5 @@ struct SignUpView: View {
 
 #Preview {
     SignUpView()
+        .environmentObject(MainViewModel())
 }

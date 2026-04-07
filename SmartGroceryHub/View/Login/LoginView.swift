@@ -9,105 +9,96 @@ import SwiftUI
 
 struct LoginView: View {
     
-    @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    @StateObject var loginVM = MainViewModel.shared;
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var mainVM: MainViewModel
     
     var body: some View {
-        ZStack{
+        ZStack {
             Image("bottom_bg")
-            .resizable()
-            .scaledToFill()
-            .frame(width: .screenWidth, height: .screenHeight)
+                .resizable()
+                .scaledToFill()
+                .frame(width: .screenWidth, height: .screenHeight)
             
-            VStack{
+            VStack {
                 Image("app_logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 100)
-                    .padding(.bottom, .screenWidth * 0.0)
+                    .frame(width: 80)
+                    .padding(.bottom, AppSpacing.xs)
                 
                 Text("Đăng nhập")
-                    .font(.custom("Times New Roman", size: 40))
-                    .foregroundColor(.primaryText)
-                    .bold()
-                    .padding(.bottom, 4)
+                    .font(AppTypography.largeTitle(.bold))
+                    .foregroundColor(AppColors.textPrimary)
+                    .padding(.bottom, AppSpacing.xxs)
+                
                 Text("Nhập Email và mật khẩu của bạn")
-                    .font(.custom("Times New Roman", size: 16))
-                    .foregroundColor(.secondaryText)
-                    .padding(.bottom, .screenWidth * 0.1)
+                    .font(AppTypography.body())
+                    .foregroundColor(AppColors.textSecondary)
+                    .padding(.bottom, AppSpacing.xxl)
                 
-                LineTextField( title: "Email", placholder: "Nhập email của bạn", txt: $loginVM.txtEmail, keyboardType: .emailAddress)
-                    .font(.custom("Times New Roman", size: 16))
-                    .padding(.bottom, .screenWidth * 0.07)
+                LineTextField(title: "Email", placholder: "Nhập email của bạn", txt: $mainVM.txtEmail, keyboardType: .emailAddress)
+                    .padding(.bottom, AppSpacing.xl)
                 
-                LineSecureField( title: "Mật khẩu", placholder: "Nhập mật khẩu của bạn", txt: $loginVM.txtPassword, isShowPassword: $loginVM.isShowPassword)
-                    .font(.custom("Times New Roman", size: 16))
-                    .padding(.bottom, .screenWidth * 0.02)
+                LineSecureField(title: "Mật khẩu", placholder: "Nhập mật khẩu của bạn", txt: $mainVM.txtPassword, isShowPassword: $mainVM.isShowPassword)
+                    .padding(.bottom, AppSpacing.sm)
                 
-                Button{
-                    
-                } label: {
+                Button { } label: {
                     Text("Bạn quên mật khẩu?")
-                        .font(.custom("Times New Roman", size: 16))
-                        .foregroundColor(.primaryText)
+                        .font(AppTypography.callout(.medium))
+                        .foregroundColor(AppColors.textPrimary)
                 }
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .trailing)
-                .padding(.bottom, .screenWidth * 0.03)
+                .padding(.bottom, AppSpacing.lg)
                 
-                RoundButton(title: "Đăng nhập") {
-                    loginVM.serviceCallLogin()
+                Button {
+                    mainVM.serviceCallLogin()
+                } label: {
+                    Text("Đăng nhập")
                 }
-                .font(.custom("Times New Roman", size: 16))
-                .padding(.bottom, .screenWidth * 0.05)
+                .buttonStyle(PrimaryButtonStyle(isLoading: mainVM.isLoading))
+                .disabled(mainVM.isLoading)
+                .padding(.bottom, AppSpacing.lg)
                 
                 NavigationLink {
                     SignUpView()
                 } label: {
-                    HStack{
+                    HStack {
                         Text("Bạn chưa có tài khoản?")
-                            .font(.custom("Times New Roman", size: 16))
-                            .foregroundColor(.primaryText)
-                        
+                            .font(AppTypography.body())
+                            .foregroundColor(AppColors.textPrimary)
                         Text("Đăng ký")
-                            .font(.custom("Times New Roman", size: 16))
-                            .foregroundColor(.primaryApp)
+                            .font(AppTypography.body(.semibold))
+                            .foregroundColor(AppColors.primary)
                     }
                 }
                 
                 Spacer()
-                
             }
             .padding(.top, .topInsets + 64)
-            .padding(.horizontal, 20)
+            .padding(.horizontal, AppSpacing.lg)
             .padding(.bottom, .bottomInsets)
             
-            VStack{
-                
-                HStack{
-                    
-                    Button{
-                        mode.wrappedValue.dismiss()
+            VStack {
+                HStack {
+                    Button {
+                        dismiss()
                     } label: {
-                        Image("back")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                        
+                        Image(systemName: AppIcons.back)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(AppColors.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(AppColors.surface.opacity(0.8))
+                            .cornerRadius(AppRadius.sm)
                     }
-                    
                     Spacer()
-                    
                 }
-                
                 Spacer()
-                
             }
             .padding(.top, .topInsets)
-            .padding(.horizontal, 20)
-            
+            .padding(.horizontal, AppSpacing.lg)
         }
-        .alert(isPresented: $loginVM.showError) {
-            Alert(title: Text(Globs.AppName), message: Text( loginVM.errorMessage ), dismissButton: .default(Text("OK")))
+        .alert(isPresented: $mainVM.showError) {
+            Alert(title: Text(Globs.AppName), message: Text(mainVM.errorMessage), dismissButton: .default(Text("OK")))
         }
         .background(Color.white)
         .navigationTitle("")
@@ -118,7 +109,6 @@ struct LoginView: View {
 }
 
 #Preview {
-    NavigationView{
-        LoginView()
-    }
+    LoginView()
+        .environmentObject(MainViewModel())
 }

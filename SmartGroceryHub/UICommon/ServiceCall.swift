@@ -9,7 +9,18 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
-class FirebaseService {
+protocol FirebaseServiceProvider {
+    func signIn(email: String, password: String) async throws -> User
+    func signUp(email: String, password: String, username: String) async throws -> User
+    func signOut() throws
+    func fetchOfferProducts() async throws -> [ProductModel]
+    func fetchBestSellProducts() async throws -> [ProductModel]
+    func fetchAllProducts() async throws -> [ProductModel]
+    func fetchTypes() async throws -> [TypeModel]
+    func fetchUserData(uid: String) async throws -> [String: Any]?
+}
+
+class FirebaseService: FirebaseServiceProvider {
     
     static let shared = FirebaseService()
     private let db = Firestore.firestore()

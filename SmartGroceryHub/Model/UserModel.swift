@@ -17,13 +17,19 @@ struct UserModel: Identifiable, Equatable {
     var mobile: String = ""
     var mobileCode: String = ""
     
+    // Alias for ProfileEditView
+    var phone: String {
+        get { mobile }
+        set { mobile = newValue }
+    }
+    
     // Init from Firebase Auth User
     init(firebaseUser: User, userData: [String: Any]? = nil) {
         self.id = firebaseUser.uid
         self.email = firebaseUser.email ?? ""
         self.name = firebaseUser.displayName ?? ""
         self.username = userData?["username"] as? String ?? firebaseUser.displayName ?? ""
-        self.mobile = userData?["mobile"] as? String ?? ""
+        self.mobile = userData?["mobile"] as? String ?? userData?["phone"] as? String ?? ""
         self.mobileCode = userData?["mobile_code"] as? String ?? ""
     }
     

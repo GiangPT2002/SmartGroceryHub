@@ -8,62 +8,82 @@
 import SwiftUI
 
 struct WelcomeView: View {
+    @State private var showContent = false
+    
     var body: some View {
-        ZStack{
+        ZStack {
             Image("man")
                 .resizable()
                 .scaledToFill()
                 .frame(width: .screenWidth, height: .screenHeight)
             
-            VStack{
+            // Gradient overlay
+            LinearGradient(
+                colors: [Color.clear, Color.black.opacity(0.7)],
+                startPoint: .center,
+                endPoint: .bottom
+            )
+            
+            VStack {
                 Spacer()
                 
                 Image("app_logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 100, height: 100)
-                    .padding(.bottom, 8)
+                    .frame(width: 80, height: 80)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                    .animation(AppAnimation.smooth.delay(0.2), value: showContent)
+                    .padding(.bottom, AppSpacing.xs)
                 
-                Text( "Xin Chào\nquý khách")
-                    .font(.customfont(.semibold, fontSize: 48))
+                Text("Xin Chào\nquý khách")
+                    .font(AppTypography.largeTitle(.bold))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                    .animation(AppAnimation.smooth.delay(0.4), value: showContent)
                 
-                Text( "Sự hài lòng của quý khách là niềm vui của chúng tôi")
-                    .font(.customfont(.medium, fontSize: 16))
+                Text("Sự hài lòng của quý khách là niềm vui của chúng tôi")
+                    .font(AppTypography.body(.medium))
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, AppSpacing.lg)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                    .animation(AppAnimation.smooth.delay(0.6), value: showContent)
                 
                 NavigationLink {
                     SignInView()
                 } label: {
-                    Text("Get Started")
-                        .font(.customfont(.semibold, fontSize: 18))
+                    Text("Bắt đầu")
+                        .font(AppTypography.headline(.bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 60)
+                        .background(AppColors.primary)
+                        .cornerRadius(AppRadius.xl)
+                        .shadow(color: AppColors.primary.opacity(0.4), radius: 12, x: 0, y: 6)
                 }
-                .frame( minWidth: 0, maxWidth: .infinity, minHeight: 60, maxHeight: 60 )
-                .background( Color.primaryApp)
-                .cornerRadius(20)
+                .opacity(showContent ? 1 : 0)
+                .offset(y: showContent ? 0 : 30)
+                .animation(AppAnimation.smooth.delay(0.8), value: showContent)
                 
-                
-                Spacer()
-                    .frame(height: 80)
-                
+                Spacer().frame(height: 80)
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, AppSpacing.lg)
         }
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
         .ignoresSafeArea()
+        .onAppear {
+            withAnimation { showContent = true }
+        }
     }
 }
 
 #Preview {
-    NavigationView{
-        WelcomeView()
-    }
-    
+    WelcomeView()
 }
