@@ -8,24 +8,21 @@
 import SwiftUI
 
 struct RoundButton: View {
-    @State var title: String = "Tittle"
-    var didTap: (()->())?
+    var title: String = "Tittle"
+    var didTap: (() -> ())?
     
     var body: some View {
         Button {
+            AppHaptics.impact(.medium)
             didTap?()
         } label: {
             Text(title)
-                .font(.customfont(.semibold, fontSize: 18))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
         }
-        .frame( minWidth: 0, maxWidth: .infinity, minHeight: 60, maxHeight: 60 )
-        .background( Color.primaryApp)
-        .cornerRadius(20)
+        .buttonStyle(PrimaryButtonStyle())
     }
 }
 
 #Preview {
     RoundButton()
+        .padding(.horizontal, 20)
 }

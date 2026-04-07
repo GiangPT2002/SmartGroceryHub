@@ -8,58 +8,56 @@
 import SwiftUI
 
 struct LineTextField: View {
-    @State var title: String = "Title"
-    @State var placholder: String = "Placholder"
+    var title: String = "Title"
+    var placholder: String = "Placholder"
     @Binding var txt: String
-    @State var keyboardType: UIKeyboardType = .default
+    var keyboardType: UIKeyboardType = .default
     
     var body: some View {
-        VStack {
+        VStack(spacing: AppSpacing.xxs) {
             Text(title)
-                .font(.customfont(.semibold, fontSize: 16))
-                .foregroundColor(.textTitle)
+                .font(AppTypography.body(.semibold))
+                .foregroundColor(AppColors.textSecondary)
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
             
-           
             TextField(placholder, text: $txt)
+                .font(AppTypography.body(.medium))
                 .keyboardType(keyboardType)
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
-                .frame(height:40)
+                .frame(height: 40)
             
             Divider()
-            
         }
     }
 }
 
 struct LineSecureField: View {
-    @State var title: String = "Title"
-    @State var placholder: String = "Placholder"
+    var title: String = "Title"
+    var placholder: String = "Placholder"
     @Binding var txt: String
     @Binding var isShowPassword: Bool
     
-    
     var body: some View {
-        VStack {
+        VStack(spacing: AppSpacing.xxs) {
             Text(title)
-                .font(.customfont(.semibold, fontSize: 16))
-                .foregroundColor(.textTitle)
+                .font(AppTypography.body(.semibold))
+                .foregroundColor(AppColors.textSecondary)
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
             
-            if (isShowPassword) {
+            if isShowPassword {
                 TextField(placholder, text: $txt)
+                    .font(AppTypography.body(.medium))
                     .disableAutocorrection(true)
                     .autocapitalization(.none)
-                    .modifier( ShowButton(isShow: $isShowPassword))
-                    
-                    .frame(height:40)
-            }else{
+                    .modifier(ShowButton(isShow: $isShowPassword))
+                    .frame(height: 40)
+            } else {
                 SecureField(placholder, text: $txt)
+                    .font(AppTypography.body(.medium))
                     .autocapitalization(.none)
-                     .modifier( ShowButton(isShow: $isShowPassword))
-                     .frame(height:40)
-                
+                    .modifier(ShowButton(isShow: $isShowPassword))
+                    .frame(height: 40)
             }
             Divider()
         }
@@ -67,7 +65,7 @@ struct LineSecureField: View {
 }
 
 struct LineTextField_Previews: PreviewProvider {
-    @State static  var txt: String = ""
+    @State static var txt: String = ""
     static var previews: some View {
         LineTextField(txt: $txt)
             .padding(20)

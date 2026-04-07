@@ -9,42 +9,41 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct CategoryCell: View {
-    @State var tObj: TypeModel
-    var didAddCart: ( ()->() )?
+    var tObj: TypeModel
+    var didAddCart: (() -> ())?
     
     var body: some View {
-        HStack(spacing: 15) {
-            
-            WebImage(url: URL(string: tObj.image ))
+        HStack(spacing: AppSpacing.md) {
+            WebImage(url: URL(string: tObj.image))
                 .resizable()
-                .indicator(.activity) // Activity Indicator
+                .indicator(.activity)
                 .transition(.fade(duration: 0.5))
                 .scaledToFit()
-                .frame(width: 70, height: 70)
-                .padding(.leading, 15)
+                .frame(width: 65, height: 65)
+                .padding(.leading, AppSpacing.md)
             
             Text(tObj.name)
-                .font(.customfont(.bold, fontSize: 18))
-                .foregroundColor(.primaryText)
+                .font(AppTypography.headline(.bold))
+                .foregroundColor(AppColors.textPrimary)
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            
         }
-        .frame(width: 250, height: 100)
+        .frame(width: 240, height: 95)
         .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(tObj.color.opacity(0.15))
+            RoundedRectangle(cornerRadius: AppRadius.lg)
+                .fill(tObj.surfaceColor)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(tObj.color.opacity(0.5), lineWidth: 1)
+            RoundedRectangle(cornerRadius: AppRadius.lg)
+                .stroke(tObj.borderColor, lineWidth: 1)
         )
+        .shadow(color: tObj.color.opacity(0.1), radius: 4, x: 0, y: 2)
     }
 }
 
 #Preview {
     CategoryCell(tObj: TypeModel(id: "preview_1", data: [
         "type_name": "Trái cây nhập",
-        "image": "https://www.apple.com/v/apple-fresh/a/images/meta/oh-snap_overview__c92c4o82rtmu_og.png",
+        "image": "",
         "color": "F8A44C"
     ]))
 }

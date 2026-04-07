@@ -9,52 +9,82 @@ import SwiftUI
 
 struct AccountView: View {
     
-    @StateObject var mainVM = MainViewModel.shared
+    @EnvironmentObject var mainVM: MainViewModel
+    @EnvironmentObject var orderVM: OrderViewModel
+    @EnvironmentObject var favoritesVM: FavoritesViewModel
+    @State private var showLogoutConfirm = false
     
     var body: some View {
         ZStack {
-            Color(hex: "F8F9FA").ignoresSafeArea()
+            AppColors.background.ignoresSafeArea()
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     
                     // User Profile Header
-                    HStack(spacing: 20) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 70, height: 70)
-                            .foregroundColor(.primaryApp)
-                            .background(Color.white)
-                            .clipShape(Circle())
-                            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
+                    VStack(spacing: AppSpacing.md) {
+                        // Avatar with gradient ring
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    AngularGradient(
+                                        colors: [AppColors.primary, AppColors.accent, AppColors.info, AppColors.primary],
+                                        center: .center
+                                    )
+                                )
+                                .frame(width: 84, height: 84)
+                            
+                            Circle()
+                                .fill(AppColors.surface)
+                                .frame(width: 78, height: 78)
+                            
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 70, height: 70)
+                                .foregroundColor(AppColors.primary)
+                        }
                         
-                        VStack(alignment: .leading, spacing: 5) {
-                            HStack {
+                        VStack(spacing: AppSpacing.xxs) {
+                            HStack(spacing: AppSpacing.xs) {
                                 Text(mainVM.userObj.username.isEmpty ? "Người dùng mới" : mainVM.userObj.username)
-                                    .font(.customfont(.bold, fontSize: 24))
-                                    .foregroundColor(.primaryText)
+                                    .font(AppTypography.title2(.bold))
+                                    .foregroundColor(AppColors.textPrimary)
                                 
                                 NavigationLink(destination: ProfileEditView()) {
-                                    Image(systemName: "pencil")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.primaryApp)
+                                    Image(systemName: AppIcons.edit)
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .frame(width: 26, height: 26)
+                                        .background(AppColors.primary)
+                                        .cornerRadius(AppRadius.xs)
                                 }
                             }
                             
                             Text(mainVM.userObj.email.isEmpty ? "Chưa cung cấp email" : mainVM.userObj.email)
-                                .font(.customfont(.medium, fontSize: 16))
-                                .foregroundColor(.secondaryText)
+                                .font(AppTypography.callout())
+                                .foregroundColor(AppColors.textSecondary)
                         }
                         
-                        Spacer()
+                        // Stats
+                        HStack(spacing: 0) {
+                            StatItem(value: "\(orderVM.totalOrders)", label: "Đơn hàng", icon: "bag.fill")
+                            
+                            Divider().frame(height: 30)
+                            
+                            StatItem(value: "\(favoritesVM.count)", label: "Yêu thích", icon: "heart.fill")
+                        }
+                        .padding(.vertical, AppSpacing.sm)
+                        .background(AppColors.primarySurface)
+                        .cornerRadius(AppRadius.md)
+                        .padding(.horizontal, AppSpacing.lg)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, .topInsets + 20)
-                    .padding(.bottom, 30)
-                    .background(Color.white)
-                    .cornerRadius(25, corners: [.bottomLeft, .bottomRight])
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                    .padding(.top, .topInsets + AppSpacing.lg)
+                    .padding(.bottom, AppSpacing.xl)
+                    .frame(maxWidth: .infinity)
+                    .background(AppColors.surface)
+                    .cornerRadius(AppRadius.xxl, corners: [.bottomLeft, .bottomRight])
+                    .shadow(color: AppShadow.subtle.color, radius: AppShadow.subtle.radius, x: 0, y: 2)
                     
                     // Menu Options
                     VStack(spacing: 0) {
@@ -76,34 +106,77 @@ struct AccountView: View {
                             AccountRow(title: "Giới thiệu", icon: "info.circle")
                         }
                     }
-                    .background(Color.white)
-                    .cornerRadius(20)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 25)
-                    .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
+                    .background(AppColors.surface)
+                    .cornerRadius(AppRadius.lg)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.top, AppSpacing.xl)
+                    .shadow(color: AppShadow.subtle.color, radius: AppShadow.subtle.radius, x: 0, y: 2)
                     
                     // Log Out Button
                     Button {
-                        mainVM.signOut()
+                        showLogoutConfirm = true
                     } label: {
-                        HStack(spacing: 15) {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                        HStack(spacing: AppSpacing.sm) {
+                            Image(systemName: AppIcons.logout)
                             Text("Đăng xuất")
                         }
-                        .font(.customfont(.bold, fontSize: 18))
-                        .foregroundColor(.primaryApp)
+                        .font(AppTypography.headline(.bold))
+                        .foregroundColor(AppColors.error)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 60)
-                        .background(Color.primaryApp.opacity(0.1))
-                        .cornerRadius(20)
+                        .frame(height: 58)
+                        .background(AppColors.error.opacity(0.08))
+                        .cornerRadius(AppRadius.lg)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppRadius.lg)
+                                .stroke(AppColors.error.opacity(0.2), lineWidth: 1)
+                        )
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 30)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.top, AppSpacing.xxl)
                     .padding(.bottom, .bottomInsets + 120)
                 }
             }
         }
         .ignoresSafeArea(.all, edges: .top)
+        .onAppear {
+            orderVM.fetchOrders()
+        }
+        .confirmationDialog(
+            "Đăng xuất",
+            isPresented: $showLogoutConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Đăng xuất", role: .destructive) {
+                mainVM.signOut()
+            }
+            Button("Hủy", role: .cancel) { }
+        } message: {
+            Text("Bạn có chắc muốn đăng xuất khỏi tài khoản?")
+        }
+    }
+}
+
+// MARK: - Stat Item
+
+struct StatItem: View {
+    let value: String
+    let label: String
+    let icon: String
+    
+    var body: some View {
+        VStack(spacing: AppSpacing.xxs) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(AppColors.primary)
+            Text(value)
+                .font(AppTypography.title3(.bold))
+                .foregroundColor(AppColors.textPrimary)
+                .contentTransition(.numericText())
+            Text(label)
+                .font(AppTypography.caption(.medium))
+                .foregroundColor(AppColors.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -126,4 +199,7 @@ struct RoundedCorner: Shape {
 
 #Preview {
     AccountView()
+        .environmentObject(MainViewModel())
+        .environmentObject(OrderViewModel())
+        .environmentObject(FavoritesViewModel())
 }

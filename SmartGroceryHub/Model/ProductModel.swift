@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ProductModel: Identifiable, Equatable {
+struct ProductModel: Identifiable, Equatable, Hashable {
     var id: String = ""
     var catId: String = ""
     var brandId: String = ""
@@ -27,6 +27,46 @@ struct ProductModel: Identifiable, Equatable {
     var isFav: Bool = false
     var avgRating: Int = 0
 
+    // MARK: - Computed Properties
+    
+    var displayPrice: Double {
+        offerPrice ?? price
+    }
+    
+    var formattedPrice: String {
+        "\(Int(displayPrice))đ"
+    }
+    
+    var formattedOriginalPrice: String {
+        "\(Int(price))đ"
+    }
+    
+    var discountPercentage: Int? {
+        guard isOffer, let offerPrice = offerPrice, price > 0 else { return nil }
+        return Int(((price - offerPrice) / price) * 100)
+    }
+    
+    var unitLabel: String {
+        "\(unitValue) \(unitName)"
+    }
+    
+    var hasDiscount: Bool {
+        isOffer && offerPrice != nil
+    }
+    
+    var ratingStars: [StarType] {
+        (1...5).map { index in
+            if index <= avgRating { return .full }
+            return .empty
+        }
+    }
+    
+    enum StarType {
+        case full, empty
+    }
+
+    // MARK: - Init from Firestore
+    
     init(id: String, data: [String: Any]) {
         self.id = id
         self.catId = data["cat_id"] as? String ?? ""
@@ -48,7 +88,13 @@ struct ProductModel: Identifiable, Equatable {
         self.avgRating = data["avg_rating"] as? Int ?? 0
     }
     
+    // MARK: - Equatable & Hashable
+    
     static func == (lhs: ProductModel, rhs: ProductModel) -> Bool {
         return lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }

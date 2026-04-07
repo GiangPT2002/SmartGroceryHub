@@ -9,26 +9,50 @@ import SwiftUI
 
 struct SearchTextField: View {
    
-    @State var placholder: String = "Tìm kiếm"
+    var placholder: String = "Tìm kiếm"
     @Binding var txt: String
+    @FocusState private var isFocused: Bool
     
     var body: some View {
-        HStack(spacing: 15) {
+        HStack(spacing: AppSpacing.sm) {
            
-            Image(systemName: "magnifyingglass")
+            Image(systemName: AppIcons.search)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.placeholder)
+                .foregroundColor(isFocused ? AppColors.primary : AppColors.textTertiary)
            
             TextField(placholder, text: $txt)
-                .font(.customfont(.semibold, fontSize: 16))
+                .font(AppTypography.body(.medium))
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
+                .focused($isFocused)
                 .frame(minWidth: 0, maxWidth: .infinity)
+            
+            // Clear button
+            if !txt.isEmpty {
+                Button {
+                    withAnimation(AppAnimation.quick) {
+                        txt = ""
+                    }
+                    AppHaptics.impact(.light)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(AppColors.textTertiary)
+                }
+                .transition(.scale.combined(with: .opacity))
+            }
         }
-        .frame(height: 35)
-        .padding(15)
-        .background(Color(hex: "F2F3F2"))
-        .cornerRadius(18)
+        .frame(height: 38)
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, AppSpacing.sm)
+        .background(AppColors.surfaceSecondary)
+        .cornerRadius(AppRadius.md)
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.md)
+                .stroke(isFocused ? AppColors.primary.opacity(0.5) : Color.clear, lineWidth: 1.5)
+        )
+        .animation(AppAnimation.quick, value: isFocused)
+        .animation(AppAnimation.quick, value: txt.isEmpty)
     }
 }
 

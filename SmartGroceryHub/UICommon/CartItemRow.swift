@@ -9,7 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct CartItemRow: View {
-    @ObservedObject var cartVM = CartViewModel.shared
+    @EnvironmentObject var cartVM: CartViewModel
     var itemId: String
     
     private var item: CartItemModel? {
@@ -18,93 +18,100 @@ struct CartItemRow: View {
     
     var body: some View {
         if let item = item {
-            HStack(spacing: 15) {
+            HStack(spacing: AppSpacing.md) {
+                // Product image
                 WebImage(url: URL(string: item.product.image))
                     .resizable()
                     .indicator(.activity)
                     .transition(.fade(duration: 0.5))
                     .scaledToFit()
-                    .frame(width: 80, height: 80)
+                    .frame(width: 75, height: 75)
+                    .background(AppColors.surfaceSecondary)
+                    .cornerRadius(AppRadius.md)
                 
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                     HStack {
                         Text(item.product.name)
-                            .font(.customfont(.bold, fontSize: 16))
-                            .foregroundColor(.primaryText)
+                            .font(AppTypography.subheadline(.bold))
+                            .foregroundColor(AppColors.textPrimary)
                             .lineLimit(2)
                         
                         Spacer()
                         
                         Button {
-                            withAnimation(.easeInOut(duration: 0.25)) {
+                            withAnimation(AppAnimation.spring) {
                                 cartVM.removeFromCart(item: item)
                             }
                         } label: {
                             Image(systemName: "xmark")
-                                .foregroundColor(.gray)
-                                .font(.system(size: 14))
-                                .frame(width: 30, height: 30)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(AppColors.textTertiary)
+                                .frame(width: 28, height: 28)
+                                .background(AppColors.surfaceSecondary)
+                                .cornerRadius(AppRadius.xs)
                         }
                     }
                     
-                    Text("\(item.product.unitValue) \(item.product.unitName)")
-                        .font(.customfont(.medium, fontSize: 14))
-                        .foregroundColor(.secondaryText)
+                    Text(item.product.unitLabel)
+                        .font(AppTypography.footnote())
+                        .foregroundColor(AppColors.textSecondary)
                     
                     HStack {
                         // Quantity Controller
-                        HStack(spacing: 15) {
+                        HStack(spacing: AppSpacing.sm) {
                             Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(AppAnimation.quick) {
                                     cartVM.decreaseQty(item: item)
                                 }
                             } label: {
                                 Image(systemName: "minus")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(item.qty > 1 ? .primaryApp : .gray)
-                                    .frame(width: 35, height: 35)
-                                    .background(Color.white)
-                                    .cornerRadius(12)
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(item.qty > 1 ? AppColors.primary : AppColors.textTertiary)
+                                    .frame(width: 32, height: 32)
+                                    .background(AppColors.surface)
+                                    .cornerRadius(AppRadius.sm)
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                        RoundedRectangle(cornerRadius: AppRadius.sm)
+                                            .stroke(AppColors.border, lineWidth: 1)
                                     )
                             }
                             
                             Text("\(item.qty)")
-                                .font(.customfont(.semibold, fontSize: 16))
-                                .foregroundColor(.primaryText)
-                                .frame(minWidth: 25)
+                                .font(AppTypography.callout(.bold))
+                                .foregroundColor(AppColors.textPrimary)
+                                .frame(minWidth: 24)
+                                .contentTransition(.numericText())
                             
                             Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(AppAnimation.quick) {
                                     cartVM.increaseQty(item: item)
                                 }
                             } label: {
                                 Image(systemName: "plus")
-                                    .font(.system(size: 16, weight: .bold))
+                                    .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(.white)
-                                    .frame(width: 35, height: 35)
-                                    .background(Color.primaryApp)
-                                    .cornerRadius(12)
+                                    .frame(width: 32, height: 32)
+                                    .background(AppColors.primary)
+                                    .cornerRadius(AppRadius.sm)
                             }
                         }
                         
                         Spacer()
                         
-                        // Total price for this item (unit price × qty)
-                        let unitPrice = item.product.offerPrice ?? item.product.price
-                        Text("\(unitPrice * Double(item.qty), specifier: "%.0f")đ")
-                            .font(.customfont(.bold, fontSize: 18))
-                            .foregroundColor(.primaryText)
+                        // Total price for this item
+                        let unitPrice = item.product.displayPrice
+                        Text("\(Int(unitPrice * Double(item.qty)))đ")
+                            .font(AppTypography.headline(.bold))
+                            .foregroundColor(AppColors.textPrimary)
+                            .contentTransition(.numericText())
                     }
-                    .padding(.top, 5)
+                    .padding(.top, AppSpacing.xxs)
                 }
             }
-            .padding(15)
-            .background(Color.white)
-            .cornerRadius(20)
-            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
+            .padding(AppSpacing.md)
+            .background(AppColors.surface)
+            .cornerRadius(AppRadius.lg)
+            .shadow(color: AppShadow.card.color, radius: AppShadow.card.radius, x: 0, y: AppShadow.card.y)
         }
     }
 }

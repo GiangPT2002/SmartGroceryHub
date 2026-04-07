@@ -40,62 +40,38 @@ extension CGFloat {
     }
     
     static var topInsets: Double {
-        if let keyWindow = UIApplication.shared.keyWindow {
-            return keyWindow.safeAreaInsets.top
-        }
-        return 0.0
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else { return 0 }
+        return window.safeAreaInsets.top
     }
     
     static var bottomInsets: Double {
-        if let keyWindow = UIApplication.shared.keyWindow {
-            return keyWindow.safeAreaInsets.bottom
-        }
-        return 0.0
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else { return 0 }
+        return window.safeAreaInsets.bottom
     }
     
     static var horizontalInsets: Double {
-        if let keyWindow = UIApplication.shared.keyWindow {
-            return keyWindow.safeAreaInsets.left + keyWindow.safeAreaInsets.right
-        }
-        return 0.0
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else { return 0 }
+        return window.safeAreaInsets.left + window.safeAreaInsets.right
     }
     
     static var verticalInsets: Double {
-        if let keyWindow = UIApplication.shared.keyWindow {
-            return keyWindow.safeAreaInsets.top + keyWindow.safeAreaInsets.bottom
-        }
-        return 0.0
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else { return 0 }
+        return window.safeAreaInsets.top + window.safeAreaInsets.bottom
     }
-    
 }
 
 extension Color {
     
-    static var primaryApp: Color {
-        return Color(hex: "53B175")
-    }
-    
-    static var primaryText: Color {
-        return Color(hex: "030303")
-    }
-    
-    static var secondaryText: Color {
-        return Color(hex: "828282")
-    }
-    
-    static var textTitle: Color {
-        return Color(hex: "7C7C7C")
-    }
-    
-    static var placeholder: Color {
-        return Color(hex: "B1B1B1")
-    }
-    
-    static var darkGray: Color {
-        return Color(hex: "4C4F4D")
-    }
-    
-    
+    static var primaryApp: Color { AppColors.primary }
+    static var primaryText: Color { AppColors.textPrimary }
+    static var secondaryText: Color { AppColors.textSecondary }
+    static var textTitle: Color { AppColors.textSecondary }
+    static var placeholder: Color { AppColors.textTertiary }
+    static var darkGray: Color { Color(hex: "4C4F4D") }
     
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: .alphanumerics.inverted)
@@ -103,11 +79,11 @@ extension Color {
         Scanner(string: hex).scanHexInt64(&int)
         let a, r, g, b: UInt64
         switch hex.count {
-            case 3: // RGB(12 -bit)
+            case 3:
                 (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-            case 6: // RGB (24-bit)
+            case 6:
                 (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-            case 8: // ARGB (32-bit)
+            case 8:
                 (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
             default:
                 (a, r, g, b) = (1, 1, 1, 0)

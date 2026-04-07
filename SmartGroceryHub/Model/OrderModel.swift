@@ -26,11 +26,11 @@ struct OrderModel: Identifiable {
         
         var color: Color {
             switch self {
-            case .placed: return Color(hex: "3498DB")
-            case .processing: return Color(hex: "F39C12")
-            case .shipping: return Color(hex: "E67E22")
-            case .delivered: return Color(hex: "27AE60")
-            case .cancelled: return Color(hex: "E74C3C")
+            case .placed: return AppColors.info
+            case .processing: return AppColors.warning
+            case .shipping: return AppColors.accentDark
+            case .delivered: return AppColors.success
+            case .cancelled: return AppColors.error
             }
         }
         
@@ -43,7 +43,43 @@ struct OrderModel: Identifiable {
             case .cancelled: return "xmark.circle"
             }
         }
+        
+        var progress: Double {
+            switch self {
+            case .placed: return 0.25
+            case .processing: return 0.5
+            case .shipping: return 0.75
+            case .delivered: return 1.0
+            case .cancelled: return 0
+            }
+        }
     }
+    
+    // MARK: - Computed Properties
+    
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yyyy HH:mm"
+        formatter.locale = Locale(identifier: "vi_VN")
+        return formatter.string(from: createdAt)
+    }
+    
+    var formattedPrice: String {
+        "\(Int(totalPrice))đ"
+    }
+    
+    var shortId: String {
+        "#\(id.prefix(8).uppercased())"
+    }
+    
+    var relativeDate: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = Locale(identifier: "vi_VN")
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: createdAt, relativeTo: Date())
+    }
+    
+    // MARK: - Init
     
     init(id: String, data: [String: Any]) {
         self.id = id
@@ -71,6 +107,14 @@ struct OrderItemData: Identifiable {
     var productImage: String = ""
     var price: Double = 0
     var qty: Int = 1
+    
+    var totalPrice: Double {
+        price * Double(qty)
+    }
+    
+    var formattedTotal: String {
+        "\(Int(totalPrice))đ"
+    }
     
     init(data: [String: Any]) {
         self.productName = data["name"] as? String ?? ""

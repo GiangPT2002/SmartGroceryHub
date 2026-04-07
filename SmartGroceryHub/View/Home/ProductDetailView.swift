@@ -10,8 +10,10 @@ import SDWebImageSwiftUI
 
 struct ProductDetailView: View {
     
-    @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    @StateObject var cartVM = CartViewModel.shared
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var cartVM: CartViewModel
+    @EnvironmentObject var favoritesVM: FavoritesViewModel
+    @EnvironmentObject var appState: AppState
     
     var product: ProductModel
     @State private var qty: Int = 1
@@ -19,10 +21,11 @@ struct ProductDetailView: View {
     @State private var showDescription: Bool = true
     @State private var addedToCart: Bool = false
     @State private var isFavorite: Bool = false
+    @State private var imageOffset: CGFloat = 0
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            Color(hex: "F8F9FA").ignoresSafeArea()
+            AppColors.background.ignoresSafeArea()
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
@@ -30,12 +33,12 @@ struct ProductDetailView: View {
                     // MARK: - Hero Image Section
                     ZStack(alignment: .topLeading) {
                         LinearGradient(
-                            colors: [Color(hex: "F2F3F2"), Color(hex: "E8EBE8")],
+                            colors: [AppColors.surfaceSecondary, AppColors.background],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                         .frame(height: 320)
-                        .cornerRadius(30, corners: [.bottomLeft, .bottomRight])
+                        .cornerRadius(AppRadius.xxl, corners: [.bottomLeft, .bottomRight])
                         
                         WebImage(url: URL(string: product.image))
                             .resizable()
@@ -49,170 +52,197 @@ struct ProductDetailView: View {
                         // Navigation buttons
                         HStack {
                             Button {
-                                mode.wrappedValue.dismiss()
+                                dismiss()
                             } label: {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundColor(.primaryText)
+                                Image(systemName: AppIcons.back)
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(AppColors.textPrimary)
                                     .frame(width: 44, height: 44)
-                                    .background(.ultraThinMaterial)
-                                    .cornerRadius(14)
+                                    .glassMorphism(radius: AppRadius.md)
                             }
                             
                             Spacer()
                             
-                            Button {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                    isFavorite.toggle()
-                                    FavoritesViewModel.shared.toggleFavorite(product: product)
+                            HStack(spacing: AppSpacing.sm) {
+                                Button {
+                                    // Share
+                                } label: {
+                                    Image(systemName: AppIcons.share)
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(AppColors.textPrimary)
+                                        .frame(width: 44, height: 44)
+                                        .glassMorphism(radius: AppRadius.md)
                                 }
-                            } label: {
-                                Image(systemName: isFavorite ? "heart.fill" : "heart")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundColor(isFavorite ? .red : .primaryText)
-                                    .frame(width: 44, height: 44)
-                                    .background(.ultraThinMaterial)
-                                    .cornerRadius(14)
+                                
+                                Button {
+                                    withAnimation(AppAnimation.bouncy) {
+                                        isFavorite.toggle()
+                                        favoritesVM.toggleFavorite(product: product)
+                                    }
+                                } label: {
+                                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(isFavorite ? AppColors.error : AppColors.textPrimary)
+                                        .frame(width: 44, height: 44)
+                                        .glassMorphism(radius: AppRadius.md)
+                                        .scaleEffect(isFavorite ? 1.1 : 1.0)
+                                }
                             }
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, AppSpacing.lg)
                         .padding(.top, .topInsets + 10)
                     }
                     
                     // MARK: - Product Info
-                    VStack(alignment: .leading, spacing: 15) {
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
                         
-                        // Name & Unit
+                        // Name & Rating
                         HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 6) {
+                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
                                 Text(product.name)
-                                    .font(.customfont(.bold, fontSize: 26))
-                                    .foregroundColor(.primaryText)
+                                    .font(AppTypography.title1(.bold))
+                                    .foregroundColor(AppColors.textPrimary)
                                 
-                                Text("\(product.unitValue) \(product.unitName)")
-                                    .font(.customfont(.medium, fontSize: 16))
-                                    .foregroundColor(.secondaryText)
+                                Text(product.unitLabel)
+                                    .font(AppTypography.body())
+                                    .foregroundColor(AppColors.textSecondary)
                             }
                             
                             Spacer()
+                            
+                            // Rating
+                            if product.avgRating > 0 {
+                                HStack(spacing: 4) {
+                                    Image(systemName: AppIcons.star)
+                                        .font(.system(size: 14))
+                                        .foregroundColor(AppColors.accent)
+                                    Text("\(product.avgRating)")
+                                        .font(AppTypography.subheadline(.bold))
+                                        .foregroundColor(AppColors.textPrimary)
+                                }
+                                .padding(.horizontal, AppSpacing.sm)
+                                .padding(.vertical, AppSpacing.xxs + 2)
+                                .background(AppColors.accentLight)
+                                .cornerRadius(AppRadius.pill)
+                            }
                         }
                         
                         // Price Section
-                        HStack(alignment: .bottom, spacing: 10) {
-                            if product.isOffer, let offerPrice = product.offerPrice {
-                                Text("\(offerPrice, specifier: "%.0f")đ")
-                                    .font(.customfont(.bold, fontSize: 28))
-                                    .foregroundColor(.primaryApp)
+                        HStack(alignment: .bottom, spacing: AppSpacing.sm) {
+                            if product.hasDiscount, let offerPrice = product.offerPrice {
+                                Text("\(Int(offerPrice))đ")
+                                    .font(AppTypography.title1(.bold))
+                                    .foregroundColor(AppColors.primary)
                                 
-                                Text("\(product.price, specifier: "%.0f")đ")
-                                    .font(.customfont(.medium, fontSize: 18))
-                                    .foregroundColor(.secondaryText)
-                                    .strikethrough(color: .secondaryText)
+                                Text(product.formattedOriginalPrice)
+                                    .font(AppTypography.body())
+                                    .foregroundColor(AppColors.textTertiary)
+                                    .strikethrough(color: AppColors.textTertiary)
                                 
-                                // Discount badge
-                                let discount = Int(((product.price - offerPrice) / product.price) * 100)
-                                Text("-\(discount)%")
-                                    .font(.customfont(.bold, fontSize: 14))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 4)
-                                    .background(Color.red.opacity(0.85))
-                                    .cornerRadius(8)
+                                if let discount = product.discountPercentage {
+                                    Text("-\(discount)%")
+                                        .font(AppTypography.caption(.bold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, AppSpacing.sm)
+                                        .padding(.vertical, AppSpacing.xxs)
+                                        .background(AppColors.error.opacity(0.85))
+                                        .cornerRadius(AppRadius.xs)
+                                }
                             } else {
-                                Text("\(product.price, specifier: "%.0f")đ")
-                                    .font(.customfont(.bold, fontSize: 28))
-                                    .foregroundColor(.primaryApp)
+                                Text(product.formattedPrice)
+                                    .font(AppTypography.title1(.bold))
+                                    .foregroundColor(AppColors.primary)
                             }
                             
                             Spacer()
                         }
                         
-                        Divider()
-                            .padding(.vertical, 5)
+                        Divider().padding(.vertical, AppSpacing.xxs)
                         
                         // Quantity Stepper
                         HStack {
                             Text("Số lượng")
-                                .font(.customfont(.semibold, fontSize: 18))
-                                .foregroundColor(.primaryText)
+                                .font(AppTypography.headline())
+                                .foregroundColor(AppColors.textPrimary)
                             
                             Spacer()
                             
-                            HStack(spacing: 20) {
+                            HStack(spacing: AppSpacing.lg) {
                                 Button {
-                                    if qty > 1 { qty -= 1 }
+                                    if qty > 1 {
+                                        AppHaptics.impact(.light)
+                                        withAnimation(AppAnimation.quick) { qty -= 1 }
+                                    }
                                 } label: {
                                     Image(systemName: "minus")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(qty > 1 ? .primaryApp : .gray)
-                                        .frame(width: 44, height: 44)
-                                        .background(Color.white)
-                                        .cornerRadius(14)
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(qty > 1 ? AppColors.primary : AppColors.textTertiary)
+                                        .frame(width: 40, height: 40)
+                                        .background(AppColors.surface)
+                                        .cornerRadius(AppRadius.sm)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 14)
-                                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                            RoundedRectangle(cornerRadius: AppRadius.sm)
+                                                .stroke(AppColors.border, lineWidth: 1)
                                         )
                                 }
                                 
                                 Text("\(qty)")
-                                    .font(.customfont(.bold, fontSize: 20))
-                                    .foregroundColor(.primaryText)
-                                    .frame(minWidth: 35)
+                                    .font(AppTypography.title3(.bold))
+                                    .foregroundColor(AppColors.textPrimary)
+                                    .frame(minWidth: 32)
+                                    .contentTransition(.numericText())
                                 
                                 Button {
-                                    qty += 1
+                                    AppHaptics.impact(.light)
+                                    withAnimation(AppAnimation.quick) { qty += 1 }
                                 } label: {
                                     Image(systemName: "plus")
-                                        .font(.system(size: 18, weight: .bold))
+                                        .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.white)
-                                        .frame(width: 44, height: 44)
-                                        .background(Color.primaryApp)
-                                        .cornerRadius(14)
+                                        .frame(width: 40, height: 40)
+                                        .background(AppColors.primary)
+                                        .cornerRadius(AppRadius.sm)
+                                        .shadow(color: AppColors.primary.opacity(0.3), radius: 4, x: 0, y: 2)
                                 }
                             }
                         }
                         
-                        Divider()
-                            .padding(.vertical, 5)
+                        Divider().padding(.vertical, AppSpacing.xxs)
                         
-                        // MARK: - Description Section
+                        // Description
                         DisclosureGroup(isExpanded: $showDescription) {
                             Text(product.detail.isEmpty ? "Sản phẩm tươi ngon, chất lượng cao, được tuyển chọn kỹ lưỡng." : product.detail)
-                                .font(.customfont(.medium, fontSize: 15))
-                                .foregroundColor(.secondaryText)
+                                .font(AppTypography.callout())
+                                .foregroundColor(AppColors.textSecondary)
                                 .lineSpacing(4)
-                                .padding(.top, 8)
+                                .padding(.top, AppSpacing.xs)
                         } label: {
                             Text("Mô tả sản phẩm")
-                                .font(.customfont(.semibold, fontSize: 18))
-                                .foregroundColor(.primaryText)
+                                .font(AppTypography.headline())
+                                .foregroundColor(AppColors.textPrimary)
                         }
-                        .tint(.primaryText)
+                        .tint(AppColors.textPrimary)
                         
-                        Divider()
-                            .padding(.vertical, 5)
+                        Divider().padding(.vertical, AppSpacing.xxs)
                         
-                        // MARK: - Nutrition Section
+                        // Nutrition
                         DisclosureGroup(isExpanded: $showNutrition) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    nutritionRow(label: "Khối lượng", value: product.nutritionWeight.isEmpty ? "N/A" : product.nutritionWeight)
-                                    nutritionRow(label: "Đơn vị", value: "\(product.unitValue) \(product.unitName)")
-                                    nutritionRow(label: "Đánh giá", value: "\(product.avgRating)/5 ⭐")
-                                }
-                                Spacer()
+                            VStack(spacing: AppSpacing.sm) {
+                                nutritionRow(label: "Khối lượng", value: product.nutritionWeight.isEmpty ? "N/A" : product.nutritionWeight)
+                                nutritionRow(label: "Đơn vị", value: product.unitLabel)
+                                nutritionRow(label: "Đánh giá", value: "\(product.avgRating)/5 ⭐")
                             }
-                            .padding(.top, 8)
+                            .padding(.top, AppSpacing.xs)
                         } label: {
                             Text("Thông tin dinh dưỡng")
-                                .font(.customfont(.semibold, fontSize: 18))
-                                .foregroundColor(.primaryText)
+                                .font(AppTypography.headline())
+                                .foregroundColor(AppColors.textPrimary)
                         }
-                        .tint(.primaryText)
+                        .tint(AppColors.textPrimary)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 25)
-                    .padding(.bottom, 120)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.top, AppSpacing.xl)
+                    .padding(.bottom, 130)
                 }
             }
             
@@ -221,60 +251,74 @@ struct ProductDetailView: View {
                 Spacer()
                 
                 Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    withAnimation(AppAnimation.bouncy) {
                         cartVM.addToCartWithQty(product: product, qty: qty)
                         addedToCart = true
+                        appState.showToast("Đã thêm \(qty) sản phẩm vào giỏ!", icon: "cart.fill.badge.plus")
                     }
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        addedToCart = false
+                        withAnimation { addedToCart = false }
                     }
                 } label: {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppSpacing.sm) {
                         if addedToCart {
-                            Image(systemName: "checkmark.circle.fill")
+                            Image(systemName: AppIcons.success)
                                 .font(.system(size: 22))
-                                .foregroundColor(.white)
                             Text("Đã thêm vào giỏ!")
-                                .font(.customfont(.bold, fontSize: 18))
-                                .foregroundColor(.white)
+                                .font(AppTypography.headline(.bold))
                         } else {
                             Image(systemName: "cart.badge.plus")
-                                .font(.system(size: 22))
-                                .foregroundColor(.white)
+                                .font(.system(size: 20))
                             Text("Thêm vào giỏ")
-                                .font(.customfont(.bold, fontSize: 18))
-                                .foregroundColor(.white)
+                                .font(AppTypography.headline(.bold))
                             
                             Spacer()
                             
-                            let unitPrice = product.offerPrice ?? product.price
-                            Text("\(unitPrice * Double(qty), specifier: "%.0f")đ")
-                                .font(.customfont(.bold, fontSize: 16))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.black.opacity(0.2))
-                                .cornerRadius(10)
+                            let unitPrice = product.displayPrice
+                            Text("\(Int(unitPrice * Double(qty)))đ")
+                                .font(AppTypography.subheadline(.bold))
+                                .padding(.horizontal, AppSpacing.sm)
+                                .padding(.vertical, AppSpacing.xxs + 2)
+                                .background(Color.black.opacity(0.15))
+                                .cornerRadius(AppRadius.sm)
+                                .contentTransition(.numericText())
                         }
                     }
+                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 65)
-                    .padding(.horizontal, 20)
-                    .background(addedToCart ? Color(hex: "2ECC71") : Color.primaryApp)
-                    .cornerRadius(22)
-                    .shadow(color: Color.primaryApp.opacity(0.3), radius: 10, x: 0, y: 5)
+                    .frame(height: 60)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .background(
+                        addedToCart
+                        ? AppColors.success
+                        : AppColors.primary
+                    )
+                    .cornerRadius(AppRadius.xl)
+                    .shadow(
+                        color: (addedToCart ? AppColors.success : AppColors.primary).opacity(0.35),
+                        radius: 12, x: 0, y: 6
+                    )
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, AppSpacing.lg)
                 .padding(.bottom, .bottomInsets + 15)
             }
+            .background(
+                LinearGradient(
+                    colors: [AppColors.background.opacity(0), AppColors.background],
+                    startPoint: .top, endPoint: .center
+                )
+                .frame(height: 100)
+                .allowsHitTesting(false),
+                alignment: .top
+            )
         }
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
         .ignoresSafeArea()
         .onAppear {
-            isFavorite = FavoritesViewModel.shared.isFavorite(product: product)
+            isFavorite = favoritesVM.isFavorite(product: product)
         }
     }
     
@@ -283,12 +327,12 @@ struct ProductDetailView: View {
     private func nutritionRow(label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.customfont(.medium, fontSize: 15))
-                .foregroundColor(.secondaryText)
+                .font(AppTypography.callout())
+                .foregroundColor(AppColors.textSecondary)
             Spacer()
             Text(value)
-                .font(.customfont(.semibold, fontSize: 15))
-                .foregroundColor(.primaryText)
+                .font(AppTypography.callout(.semibold))
+                .foregroundColor(AppColors.textPrimary)
         }
     }
 }
@@ -296,7 +340,7 @@ struct ProductDetailView: View {
 #Preview {
     ProductDetailView(product: ProductModel(id: "preview_1", data: [
         "name": "Táo đỏ tươi nhập khẩu",
-        "detail": "Táo đỏ được nhập khẩu từ New Zealand, giàu vitamin C và chất xơ. Thích hợp cho mọi lứa tuổi.",
+        "detail": "Táo đỏ được nhập khẩu từ New Zealand, giàu vitamin C và chất xơ.",
         "unit_name": "kg",
         "unit_value": "1",
         "price": 85000,
@@ -306,4 +350,7 @@ struct ProductDetailView: View {
         "avg_rating": 4,
         "image": ""
     ]))
+    .environmentObject(CartViewModel())
+    .environmentObject(FavoritesViewModel())
+    .environmentObject(AppState())
 }

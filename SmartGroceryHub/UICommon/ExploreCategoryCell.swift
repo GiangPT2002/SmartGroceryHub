@@ -9,8 +9,8 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct ExploreCategoryCell: View {
-    @State var tObj: TypeModel
-    var height: CGFloat = 200 // Dynamic height for masonry effect
+    var tObj: TypeModel
+    var height: CGFloat = 200
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -24,32 +24,36 @@ struct ExploreCategoryCell: View {
                 .clipped()
             
             // Gradient Overlay for text readability
-            LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.6)]), startPoint: .center, endPoint: .bottom)
+            LinearGradient(
+                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.55)]),
+                startPoint: .center,
+                endPoint: .bottom
+            )
             
             // Blur Label Container
             HStack {
                 Text(tObj.name)
-                    .font(.customfont(.bold, fontSize: 18))
+                    .font(AppTypography.headline(.bold))
                     .foregroundColor(.white)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                 Spacer()
             }
-            .padding(15)
+            .padding(AppSpacing.md)
             .frame(maxWidth: .infinity)
             .background(.ultraThinMaterial)
         }
         .frame(height: height)
-        .cornerRadius(25)
-        .shadow(color: tObj.color.opacity(0.3), radius: 10, x: 0, y: 8)
+        .cornerRadius(AppRadius.xxl)
+        .shadow(color: tObj.color.opacity(0.25), radius: 10, x: 0, y: 6)
     }
 }
 
 #Preview {
     ExploreCategoryCell(tObj: TypeModel(id: "1", data: [
         "type_name": "Rau củ hữu cơ",
-        "image": "https://www.apple.com/v/apple-fresh/a/images/meta/oh-snap_overview__c92c4o82rtmu_og.png",
+        "image": "",
         "color": "53B175"
     ]), height: 220)
     .padding(20)

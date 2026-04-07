@@ -12,29 +12,30 @@ struct AccountRow: View {
     var icon: String
     
     var body: some View {
-        HStack(spacing: 15) {
+        HStack(spacing: AppSpacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundColor(.primaryText)
-                .frame(width: 25)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(AppColors.primary)
+                .frame(width: 36, height: 36)
+                .background(AppColors.primarySurface)
+                .cornerRadius(AppRadius.xs)
             
             Text(title)
-                .font(.customfont(.semibold, fontSize: 18))
-                .foregroundColor(.primaryText)
+                .font(AppTypography.body(.semibold))
+                .foregroundColor(AppColors.textPrimary)
             
             Spacer()
             
-            Image(systemName: "chevron.right")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.secondaryText)
+            Image(systemName: AppIcons.forward)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(AppColors.textTertiary)
         }
-        .padding(.vertical, 18)
-        .padding(.horizontal, 20)
-        .background(Color.white)
+        .padding(.vertical, AppSpacing.md)
+        .padding(.horizontal, AppSpacing.lg)
         .overlay(
             Rectangle()
-                .frame(height: 1)
-                .foregroundColor(Color.gray.opacity(0.1)),
+                .frame(height: 0.5)
+                .foregroundColor(AppColors.divider),
             alignment: .bottom
         )
     }
