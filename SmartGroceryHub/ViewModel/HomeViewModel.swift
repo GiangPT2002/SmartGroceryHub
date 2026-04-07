@@ -6,76 +6,79 @@
 //
 
 import SwiftUI
+import Combine
 
+@MainActor
 class HomeViewModel: ObservableObject {
     
-    static var shared: HomeViewModel = HomeViewModel()
+    // MARK: - View State
     
-    @Published var selectTab: Int = 0
+    enum ViewState: Equatable {
+        case idle
+        case loading
+        case loaded
+        case error(String)
+    }
+    
+    @Published var viewState: ViewState = .idle
     @Published var txtSearch: String = ""
     
     @Published var showError = false
     @Published var errorMessage = ""
-    @Published var isLoading = false
     
     @Published var offerArr: [ProductModel] = []
     @Published var bestArr: [ProductModel] = []
     @Published var listArr: [ProductModel] = []
     @Published var typeArr: [TypeModel] = []
     
+    private var searchCancellable: AnyCancellable?
+    @Published var debouncedSearch: String = ""
+    
     // MARK: - Filtered results for search
     
-    var filteredOffers: [ProductModel] {
-        guard !txtSearch.isEmpty else { return offerArr }
-        return offerArr.filter { $0.name.localizedCaseInsensitiveContains(txtSearch) }
-    }
-    
-    var filteredBest: [ProductModel] {
-        guard !txtSearch.isEmpty else { return bestArr }
-        return bestArr.filter { $0.name.localizedCaseInsensitiveContains(txtSearch) }
-    }
-    
-    var filteredList: [ProductModel] {
-        guard !txtSearch.isEmpty else { return listArr }
-        return listArr.filter { $0.name.localizedCaseInsensitiveContains(txtSearch) }
-    }
-    
     var isSearching: Bool {
-        !txtSearch.isEmpty
+        !debouncedSearch.isEmpty
     }
     
     var allFilteredProducts: [ProductModel] {
         guard isSearching else { return [] }
+        let query = debouncedSearch.lowercased()
+        var seen = Set<String>()
         var results: [ProductModel] = []
-        let query = txtSearch.lowercased()
-        for p in listArr where p.name.lowercased().contains(query) {
-            if !results.contains(where: { $0.id == p.id }) {
-                results.append(p)
-            }
-        }
-        for p in offerArr where p.name.lowercased().contains(query) {
-            if !results.contains(where: { $0.id == p.id }) {
-                results.append(p)
-            }
-        }
-        for p in bestArr where p.name.lowercased().contains(query) {
-            if !results.contains(where: { $0.id == p.id }) {
+        
+        for p in listArr + offerArr + bestArr {
+            if p.name.lowercased().contains(query) && !seen.contains(p.id) {
+                seen.insert(p.id)
                 results.append(p)
             }
         }
         return results
     }
     
-    var firebaseService: FirebaseServiceProvider = FirebaseService.shared
+    var isLoading: Bool {
+        viewState == .loading
+    }
     
-    init(){
+    var firebaseService: FirebaseServiceProvider
+    
+    init(firebaseService: FirebaseServiceProvider = FirebaseService.shared) {
+        self.firebaseService = firebaseService
+        
+        // Debounce search — 300ms delay
+        searchCancellable = $txtSearch
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] value in
+                self?.debouncedSearch = value
+            }
+        
         serviceCallList()
     }
     
     // MARK: - Firestore: Fetch Home Data
     
     func serviceCallList() {
-        isLoading = true
+        viewState = .loading
         
         Task {
             do {
@@ -86,21 +89,16 @@ class HomeViewModel: ObservableObject {
                 
                 let (fetchedOffers, fetchedBest, fetchedAll, fetchedTypes) = try await (offers, bestSellers, allProducts, types)
                 
-                await MainActor.run {
-                    self.offerArr = fetchedOffers
-                    self.bestArr = fetchedBest
-                    self.listArr = fetchedAll
-                    self.typeArr = fetchedTypes
-                    self.isLoading = false
-                }
+                self.offerArr = fetchedOffers
+                self.bestArr = fetchedBest
+                self.listArr = fetchedAll
+                self.typeArr = fetchedTypes
+                self.viewState = .loaded
             } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.showError = true
-                    self.isLoading = false
-                }
+                self.errorMessage = error.localizedDescription
+                self.showError = true
+                self.viewState = .error(error.localizedDescription)
             }
         }
     }
-    
 }

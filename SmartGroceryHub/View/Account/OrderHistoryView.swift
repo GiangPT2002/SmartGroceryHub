@@ -6,83 +6,68 @@
 //
 
 import SwiftUI
-import SDWebImageSwiftUI
 
 struct OrderHistoryView: View {
-    @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    @StateObject var orderVM = OrderViewModel.shared
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var orderVM: OrderViewModel
     
     var body: some View {
         ZStack {
-            Color(hex: "F8F9FA").ignoresSafeArea()
+            AppColors.background.ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button {
-                        mode.wrappedValue.dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(.primaryText)
-                    }
-                    
+            if orderVM.isLoading && orderVM.isEmpty {
+                VStack {
                     Spacer()
-                    
-                    Text("Đơn hàng")
-                        .font(.customfont(.bold, fontSize: 22))
-                        .foregroundColor(.primaryText)
-                    
+                    LoadingDots()
                     Spacer()
-                    
-                    Color.clear.frame(width: 25, height: 25) // Balance spacer
                 }
-                .padding(.top, .topInsets + 10)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 15)
-                .background(Color.white)
-                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
-                
-                if orderVM.isLoading && orderVM.orders.isEmpty {
+            } else if orderVM.isEmpty {
+                VStack(spacing: AppSpacing.lg) {
                     Spacer()
-                    ProgressView("Đang tải đơn hàng...")
-                        .progressViewStyle(CircularProgressViewStyle())
-                    Spacer()
-                } else if orderVM.orders.isEmpty {
-                    Spacer()
-                    VStack(spacing: 20) {
-                        Image(systemName: "bag")
-                            .font(.system(size: 80))
-                            .foregroundColor(.placeholder)
-                        
-                        Text("Chưa có đơn hàng")
-                            .font(.customfont(.bold, fontSize: 22))
-                            .foregroundColor(.primaryText)
-                        
-                        Text("Đơn hàng của bạn sẽ xuất hiện ở đây\nsau khi bạn mua sắm!")
-                            .font(.customfont(.medium, fontSize: 16))
-                            .foregroundColor(.secondaryText)
-                            .multilineTextAlignment(.center)
+                    ZStack {
+                        Circle()
+                            .fill(AppColors.primarySurface)
+                            .frame(width: 120, height: 120)
+                        Image(systemName: "bag.badge.questionmark")
+                            .font(.system(size: 50, weight: .light))
+                            .foregroundColor(AppColors.primary)
                     }
+                    
+                    Text("Chưa có đơn hàng nào")
+                        .font(AppTypography.title3(.bold))
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    Text("Hãy mua sắm để có đơn hàng đầu tiên!")
+                        .font(AppTypography.body())
+                        .foregroundColor(AppColors.textSecondary)
                     Spacer()
-                } else {
-                    ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: 15) {
-                            ForEach(orderVM.orders) { order in
-                                OrderCard(order: order)
-                            }
+                }
+            } else {
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: AppSpacing.md) {
+                        ForEach(orderVM.orders) { order in
+                            OrderCard(order: order)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 20)
-                        .padding(.bottom, 40)
                     }
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.vertical, AppSpacing.lg)
                 }
             }
         }
-        .ignoresSafeArea(.all, edges: .top)
-        .navigationTitle("")
+        .navigationTitle("Đơn hàng")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
-        .navigationBarHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: AppIcons.back)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(AppColors.textPrimary)
+                }
+            }
+        }
         .onAppear {
             orderVM.fetchOrders()
         }
@@ -92,121 +77,122 @@ struct OrderHistoryView: View {
 // MARK: - Order Card
 
 struct OrderCard: View {
-    var order: OrderModel
-    @State private var isExpanded = false
-    
-    private var dateFormatter: DateFormatter {
-        let f = DateFormatter()
-        f.dateFormat = "dd/MM/yyyy HH:mm"
-        f.locale = Locale(identifier: "vi_VN")
-        return f
-    }
+    let order: OrderModel
+    @State private var isExpanded: Bool = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Order header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Đơn #\(order.id.prefix(8).uppercased())")
-                        .font(.customfont(.bold, fontSize: 16))
-                        .foregroundColor(.primaryText)
-                    
-                    Text(dateFormatter.string(from: order.createdAt))
-                        .font(.customfont(.medium, fontSize: 14))
-                        .foregroundColor(.secondaryText)
-                }
-                
-                Spacer()
-                
-                // Status badge
-                HStack(spacing: 5) {
-                    Image(systemName: order.status.icon)
-                        .font(.system(size: 12, weight: .semibold))
-                    Text(order.status.rawValue)
-                        .font(.customfont(.semibold, fontSize: 12))
-                }
-                .foregroundColor(order.status.color)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(order.status.color.opacity(0.1))
-                .cornerRadius(10)
-            }
-            
-            Divider()
-            
-            // Order summary
-            HStack {
-                Text("\(order.itemCount) sản phẩm")
-                    .font(.customfont(.medium, fontSize: 15))
-                    .foregroundColor(.secondaryText)
-                
-                Spacer()
-                
-                Text("\(order.totalPrice, specifier: "%.0f")đ")
-                    .font(.customfont(.bold, fontSize: 18))
-                    .foregroundColor(.primaryApp)
-            }
-            
-            // Expandable items list
-            if isExpanded && !order.items.isEmpty {
-                VStack(spacing: 10) {
-                    ForEach(order.items) { item in
-                        HStack(spacing: 12) {
-                            WebImage(url: URL(string: item.productImage))
-                                .resizable()
-                                .indicator(.activity)
-                                .scaledToFit()
-                                .frame(width: 40, height: 40)
-                                .cornerRadius(8)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(item.productName)
-                                    .font(.customfont(.medium, fontSize: 14))
-                                    .foregroundColor(.primaryText)
-                                    .lineLimit(1)
-                                Text("x\(item.qty)")
-                                    .font(.customfont(.medium, fontSize: 13))
-                                    .foregroundColor(.secondaryText)
-                            }
-                            
-                            Spacer()
-                            
-                            Text("\(item.price * Double(item.qty), specifier: "%.0f")đ")
-                                .font(.customfont(.semibold, fontSize: 14))
-                                .foregroundColor(.primaryText)
-                        }
-                    }
-                }
-                .padding(.top, 5)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-            
-            // Expand/Collapse button
+        VStack(spacing: 0) {
+            // Header
             Button {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                withAnimation(AppAnimation.spring) {
                     isExpanded.toggle()
                 }
             } label: {
-                HStack {
+                HStack(spacing: AppSpacing.md) {
+                    // Status Icon
+                    ZStack {
+                        Circle()
+                            .fill(order.status.color.opacity(0.12))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: order.status.icon)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(order.status.color)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(order.shortId)
+                            .font(AppTypography.subheadline(.bold))
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Text(order.formattedDate)
+                            .font(AppTypography.caption(.medium))
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                    
                     Spacer()
-                    Text(isExpanded ? "Thu gọn" : "Xem chi tiết")
-                        .font(.customfont(.semibold, fontSize: 14))
-                        .foregroundColor(.primaryApp)
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(order.formattedPrice)
+                            .font(AppTypography.headline(.bold))
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Text(order.status.rawValue)
+                            .font(AppTypography.caption(.semibold))
+                            .foregroundColor(order.status.color)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(order.status.color.opacity(0.12))
+                            .cornerRadius(AppRadius.xs)
+                    }
+                    
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.primaryApp)
-                    Spacer()
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(AppColors.textTertiary)
                 }
-                .padding(.top, 5)
+            }
+            .padding(AppSpacing.md)
+            
+            // Expandable Detail
+            if isExpanded {
+                Divider().padding(.horizontal, AppSpacing.md)
+                
+                // Progress Bar
+                VStack(spacing: AppSpacing.sm) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(AppColors.surfaceSecondary)
+                                .frame(height: 6)
+                            
+                            Capsule()
+                                .fill(order.status.color)
+                                .frame(width: geo.size.width * order.status.progress, height: 6)
+                                .animation(AppAnimation.smooth, value: order.status)
+                        }
+                    }
+                    .frame(height: 6)
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.top, AppSpacing.sm)
+                }
+                
+                // Items
+                VStack(spacing: AppSpacing.xs) {
+                    ForEach(order.items) { item in
+                        HStack(spacing: AppSpacing.sm) {
+                            Text(item.productName)
+                                .font(AppTypography.subheadline())
+                                .foregroundColor(AppColors.textPrimary)
+                                .lineLimit(1)
+                            
+                            Spacer()
+                            
+                            Text("x\(item.qty)")
+                                .font(AppTypography.footnote(.semibold))
+                                .foregroundColor(AppColors.textSecondary)
+                            
+                            Text(item.formattedTotal)
+                                .font(AppTypography.subheadline(.semibold))
+                                .foregroundColor(AppColors.textPrimary)
+                                .frame(minWidth: 60, alignment: .trailing)
+                        }
+                    }
+                }
+                .padding(AppSpacing.md)
             }
         }
-        .padding(18)
-        .background(Color.white)
-        .cornerRadius(20)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
+        .background(AppColors.surface)
+        .cornerRadius(AppRadius.lg)
+        .shadow(color: AppShadow.card.color, radius: AppShadow.card.radius, x: 0, y: AppShadow.card.y)
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.lg)
+                .stroke(AppColors.border.opacity(0.3), lineWidth: 0.5)
+        )
     }
 }
 
 #Preview {
-    OrderHistoryView()
+    NavigationStack {
+        OrderHistoryView()
+            .environmentObject(OrderViewModel())
+    }
 }

@@ -7,9 +7,8 @@
 
 import SwiftUI
 
+@MainActor
 class ExploreViewModel: ObservableObject {
-    
-    static var shared: ExploreViewModel = ExploreViewModel()
     
     @Published var txtSearch: String = ""
     @Published var typeArr: [TypeModel] = []
@@ -18,9 +17,23 @@ class ExploreViewModel: ObservableObject {
     @Published var showError = false
     @Published var isLoading = false
     
-    var firebaseService: FirebaseServiceProvider = FirebaseService.shared
+    var firebaseService: FirebaseServiceProvider
     
-    init() {
+    var filteredTypes: [TypeModel] {
+        guard !txtSearch.isEmpty else { return typeArr }
+        return typeArr.filter { $0.name.localizedCaseInsensitiveContains(txtSearch) }
+    }
+    
+    var leftColumnItems: [TypeModel] {
+        stride(from: 0, to: filteredTypes.count, by: 2).map { filteredTypes[$0] }
+    }
+    
+    var rightColumnItems: [TypeModel] {
+        stride(from: 1, to: filteredTypes.count, by: 2).map { filteredTypes[$0] }
+    }
+    
+    init(firebaseService: FirebaseServiceProvider = FirebaseService.shared) {
+        self.firebaseService = firebaseService
         serviceCallList()
     }
     
@@ -29,16 +42,12 @@ class ExploreViewModel: ObservableObject {
         Task {
             do {
                 let types = try await self.firebaseService.fetchTypes()
-                await MainActor.run {
-                    self.typeArr = types
-                    self.isLoading = false
-                }
+                self.typeArr = types
+                self.isLoading = false
             } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.showError = true
-                    self.isLoading = false
-                }
+                self.errorMessage = error.localizedDescription
+                self.showError = true
+                self.isLoading = false
             }
         }
     }

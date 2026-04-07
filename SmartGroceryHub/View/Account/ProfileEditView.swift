@@ -6,141 +6,190 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct ProfileEditView: View {
-    @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    @StateObject var mainVM = MainViewModel.shared
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var mainVM: MainViewModel
     
-    @State private var editName: String = ""
-    @State private var editEmail: String = ""
+    @State private var txtName: String = ""
+    @State private var txtEmail: String = ""
+    @State private var txtPhone: String = ""
+    @State private var isSaving: Bool = false
     @State private var showSaved: Bool = false
     
     var body: some View {
         ZStack {
-            Color(hex: "F8F9FA").ignoresSafeArea()
+            AppColors.background.ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button {
-                        mode.wrappedValue.dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(.primaryText)
-                    }
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: AppSpacing.xl) {
                     
-                    Spacer()
-                    
-                    Text("Thông tin cá nhân")
-                        .font(.customfont(.bold, fontSize: 22))
-                        .foregroundColor(.primaryText)
-                    
-                    Spacer()
-                    
-                    Color.clear.frame(width: 25, height: 25)
-                }
-                .padding(.top, .topInsets + 10)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 15)
-                .background(Color.white)
-                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
-                
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 25) {
-                        
-                        // Avatar
-                        VStack(spacing: 15) {
+                    // Avatar Section
+                    VStack(spacing: AppSpacing.sm) {
+                        ZStack {
+                            Circle()
+                                .fill(AppColors.primarySurface)
+                                .frame(width: 100, height: 100)
+                            
                             Image(systemName: "person.crop.circle.fill")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 100, height: 100)
-                                .foregroundColor(.primaryApp)
-                            
-                            Text(mainVM.userObj.username.isEmpty ? "Người dùng" : mainVM.userObj.username)
-                                .font(.customfont(.bold, fontSize: 22))
-                                .foregroundColor(.primaryText)
+                                .frame(width: 90, height: 90)
+                                .foregroundColor(AppColors.primary)
                         }
-                        .padding(.top, 30)
-                        
-                        // Fields
-                        VStack(spacing: 20) {
-                            ProfileField(title: "Họ và tên", value: $editName, icon: "person")
-                            ProfileField(title: "Email", value: $editEmail, icon: "envelope")
+                        .overlay(alignment: .bottomTrailing) {
+                            Circle()
+                                .fill(AppColors.primary)
+                                .frame(width: 32, height: 32)
+                                .overlay(
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.white)
+                                )
+                                .shadow(color: AppShadow.subtle.color, radius: 4, x: 0, y: 2)
                         }
-                        .padding(.horizontal, 20)
-                        
-                        // Save button
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                showSaved = true
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                showSaved = false
-                            }
-                        } label: {
-                            HStack {
-                                if showSaved {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 20))
-                                    Text("Đã lưu!")
-                                } else {
-                                    Text("Lưu thay đổi")
-                                }
-                            }
-                            .font(.customfont(.bold, fontSize: 18))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 60)
-                            .background(showSaved ? Color(hex: "27AE60") : Color.primaryApp)
-                            .cornerRadius(20)
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 10)
                     }
+                    .padding(.top, AppSpacing.xl)
+                    
+                    // Form
+                    VStack(spacing: AppSpacing.lg) {
+                        ModernTextField(title: "Họ và tên", placeholder: "Nhập họ và tên", text: $txtName, icon: "person")
+                        ModernTextField(title: "Email", placeholder: "Nhập email", text: $txtEmail, icon: "envelope", keyboardType: .emailAddress, disabled: true)
+                        ModernTextField(title: "Số điện thoại", placeholder: "Nhập số điện thoại", text: $txtPhone, icon: "phone", keyboardType: .phonePad)
+                    }
+                    .padding(.horizontal, AppSpacing.lg)
+                    
+                    // Save Button
+                    Button {
+                        saveProfile()
+                    } label: {
+                        HStack(spacing: AppSpacing.xs) {
+                            if isSaving {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(0.9)
+                            }
+                            Text(showSaved ? "Đã lưu ✓" : "Lưu thông tin")
+                        }
+                    }
+                    .buttonStyle(PrimaryButtonStyle(isLoading: isSaving))
+                    .disabled(isSaving)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.top, AppSpacing.md)
+                }
+                .padding(.bottom, AppSpacing.huge)
+            }
+        }
+        .navigationTitle("Thông tin cá nhân")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: AppIcons.back)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(AppColors.textPrimary)
                 }
             }
         }
-        .ignoresSafeArea(.all, edges: .top)
-        .navigationTitle("")
-        .navigationBarBackButtonHidden(true)
-        .navigationBarHidden(true)
         .onAppear {
-            editName = mainVM.userObj.username
-            editEmail = mainVM.userObj.email
+            txtName = mainVM.userObj.username
+            txtEmail = mainVM.userObj.email
+            txtPhone = mainVM.userObj.phone
+        }
+    }
+    
+    private func saveProfile() {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        isSaving = true
+        
+        let data: [String: Any] = [
+            "username": txtName,
+            "phone": txtPhone,
+            "updated_at": FieldValue.serverTimestamp()
+        ]
+        
+        Firestore.firestore().collection("users").document(userId).setData(data, merge: true) { error in
+            DispatchQueue.main.async {
+                isSaving = false
+                if error == nil {
+                    mainVM.userObj.username = txtName
+                    mainVM.userObj.phone = txtPhone
+                    
+                    withAnimation(AppAnimation.spring) {
+                        showSaved = true
+                    }
+                    AppHaptics.notification(.success)
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation { showSaved = false }
+                    }
+                }
+            }
         }
     }
 }
 
-struct ProfileField: View {
-    var title: String
-    @Binding var value: String
-    var icon: String
+// MARK: - Modern Text Field
+
+struct ModernTextField: View {
+    let title: String
+    let placeholder: String
+    @Binding var text: String
+    var icon: String? = nil
+    var keyboardType: UIKeyboardType = .default
+    var disabled: Bool = false
+    
+    @FocusState private var isFocused: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
             Text(title)
-                .font(.customfont(.semibold, fontSize: 15))
-                .foregroundColor(.secondaryText)
+                .font(AppTypography.caption(.semibold))
+                .foregroundColor(isFocused ? AppColors.primary : AppColors.textSecondary)
             
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(.primaryApp)
-                    .frame(width: 24)
+            HStack(spacing: AppSpacing.sm) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(isFocused ? AppColors.primary : AppColors.textTertiary)
+                        .frame(width: 20)
+                }
                 
-                TextField(title, text: $value)
-                    .font(.customfont(.medium, fontSize: 17))
-                    .foregroundColor(.primaryText)
+                TextField(placeholder, text: $text)
+                    .font(AppTypography.body(.medium))
+                    .keyboardType(keyboardType)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .focused($isFocused)
+                    .disabled(disabled)
             }
-            .padding(16)
-            .background(Color.white)
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 3)
+            .padding(.horizontal, AppSpacing.md)
+            .frame(height: 52)
+            .background(
+                disabled ? AppColors.surfaceSecondary.opacity(0.5) : AppColors.surface
+            )
+            .cornerRadius(AppRadius.md)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.md)
+                    .stroke(
+                        isFocused ? AppColors.primary : AppColors.border,
+                        lineWidth: isFocused ? 1.5 : 0.5
+                    )
+            )
+            .animation(AppAnimation.quick, value: isFocused)
         }
     }
 }
 
 #Preview {
-    ProfileEditView()
+    NavigationStack {
+        ProfileEditView()
+            .environmentObject(MainViewModel())
+    }
 }

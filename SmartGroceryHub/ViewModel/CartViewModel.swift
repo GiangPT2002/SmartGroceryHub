@@ -9,8 +9,8 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
+@MainActor
 class CartViewModel: ObservableObject {
-    static let shared = CartViewModel()
     
     @Published var cartItems: [CartItemModel] = []
     @Published var showCheckoutSuccess: Bool = false
@@ -19,9 +19,25 @@ class CartViewModel: ObservableObject {
     
     var totalPrice: Double {
         cartItems.reduce(0) { total, item in
-            let price = item.product.offerPrice ?? item.product.price
+            let price = item.product.displayPrice
             return total + (price * Double(item.qty))
         }
+    }
+    
+    var formattedTotal: String {
+        "\(Int(totalPrice))đ"
+    }
+    
+    var itemCount: Int {
+        cartItems.count
+    }
+    
+    var totalQuantity: Int {
+        cartItems.reduce(0) { $0 + $1.qty }
+    }
+    
+    var isEmpty: Bool {
+        cartItems.isEmpty
     }
     
     init() {
@@ -29,43 +45,77 @@ class CartViewModel: ObservableObject {
     }
     
     func addToCart(product: ProductModel) {
+        AppHaptics.impact(.light)
         if let index = cartItems.firstIndex(where: { $0.product.id == product.id }) {
-            cartItems[index].qty += 1
+            withAnimation(AppAnimation.spring) {
+                cartItems[index].qty += 1
+            }
         } else {
-            cartItems.append(CartItemModel(product: product))
+            withAnimation(AppAnimation.spring) {
+                cartItems.append(CartItemModel(product: product))
+            }
+        }
+        saveCart()
+    }
+    
+    func addToCartWithQty(product: ProductModel, qty: Int) {
+        AppHaptics.impact(.medium)
+        if let index = cartItems.firstIndex(where: { $0.product.id == product.id }) {
+            withAnimation(AppAnimation.spring) {
+                cartItems[index].qty += qty
+            }
+        } else {
+            var item = CartItemModel(product: product)
+            item.qty = qty
+            withAnimation(AppAnimation.spring) {
+                cartItems.append(item)
+            }
         }
         saveCart()
     }
     
     func removeFromCart(item: CartItemModel) {
-        cartItems.removeAll { $0.id == item.id }
+        AppHaptics.impact(.medium)
+        withAnimation(AppAnimation.spring) {
+            cartItems.removeAll { $0.id == item.id }
+        }
         saveCart()
     }
     
     func increaseQty(item: CartItemModel) {
+        AppHaptics.impact(.light)
         if let index = cartItems.firstIndex(where: { $0.id == item.id }) {
-            cartItems[index].qty += 1
-            saveCart()
-        }
-    }
-    
-    func decreaseQty(item: CartItemModel) {
-        if let index = cartItems.firstIndex(where: { $0.id == item.id }) {
-            if cartItems[index].qty > 1 {
-                cartItems[index].qty -= 1
-            } else {
-                cartItems.remove(at: index)
+            withAnimation(AppAnimation.quick) {
+                cartItems[index].qty += 1
             }
             saveCart()
         }
     }
     
-    func checkout() {
+    func decreaseQty(item: CartItemModel) {
+        AppHaptics.impact(.light)
+        if let index = cartItems.firstIndex(where: { $0.id == item.id }) {
+            if cartItems[index].qty > 1 {
+                withAnimation(AppAnimation.quick) {
+                    cartItems[index].qty -= 1
+                }
+            } else {
+                withAnimation(AppAnimation.spring) {
+                    cartItems.remove(at: index)
+                }
+            }
+            saveCart()
+        }
+    }
+    
+    func checkout(orderVM: OrderViewModel) {
         if !cartItems.isEmpty {
-            // Save order before clearing cart
-            OrderViewModel.shared.placeOrder(cartItems: cartItems, totalPrice: totalPrice)
+            AppHaptics.notification(.success)
+            orderVM.placeOrder(cartItems: cartItems, totalPrice: totalPrice)
             
-            cartItems.removeAll()
+            withAnimation(AppAnimation.smooth) {
+                cartItems.removeAll()
+            }
             clearCartFromFirestore()
             showCheckoutSuccess = true
         }
@@ -123,7 +173,7 @@ class CartViewModel: ObservableObject {
             guard let data = document?.data(),
                   let itemsData = data["items"] as? [[String: Any]] else { return }
             
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self.cartItems = itemsData.compactMap { itemData in
                     let productId = itemData["product_id"] as? String ?? ""
                     guard !productId.isEmpty else { return nil }

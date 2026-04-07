@@ -30,27 +30,31 @@ struct SignInView: View {
             VStack {
                 Spacer()
                 
-                VStack(spacing: 20) {
+                VStack(spacing: AppSpacing.lg) {
                     
                     // Title
                     Text("Mua hàng cùng với\nSmart Grocery Hub")
-                        .font(.customfont(.bold, fontSize: 32))
+                        .font(AppTypography.title1(.bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                         .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
-                        .padding(.bottom, 20)
+                        .padding(.bottom, AppSpacing.lg)
                     
                     // Email Sign In Button
                     NavigationLink {
                         LoginView()
                     } label: {
-                        Text("Tiếp tục bằng Email")
-                            .font(.customfont(.bold, fontSize: 18))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, minHeight: 60)
-                            .background(Color.primaryApp)
-                            .cornerRadius(20)
-                            .shadow(color: Color.primaryApp.opacity(0.3), radius: 10, x: 0, y: 5)
+                        HStack(spacing: AppSpacing.sm) {
+                            Image(systemName: "envelope.fill")
+                                .font(.system(size: 18))
+                            Text("Tiếp tục bằng Email")
+                                .font(AppTypography.headline(.bold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, minHeight: 60)
+                        .background(AppColors.primary)
+                        .cornerRadius(AppRadius.xl)
+                        .shadow(color: AppColors.primary.opacity(0.3), radius: 10, x: 0, y: 5)
                     }
                     
                     // Registration Link
@@ -58,61 +62,57 @@ struct SignInView: View {
                         SignUpView()
                     } label: {
                         Text("Chưa có tài khoản? Đăng ký ngay")
-                            .font(.customfont(.semibold, fontSize: 16))
+                            .font(AppTypography.callout(.semibold))
                             .foregroundColor(.white)
                             .padding(.vertical, 10)
                     }
                     
                     // Divider
-                    HStack(spacing: 15) {
-                        Rectangle().fill(Color.white.opacity(0.3)).frame(height: 1)
+                    HStack(spacing: AppSpacing.md) {
+                        Rectangle().fill(Color.white.opacity(0.3)).frame(height: 0.5)
                         Text("Hoặc đăng nhập với")
-                            .font(.customfont(.medium, fontSize: 14))
+                            .font(AppTypography.footnote(.medium))
                             .foregroundColor(.white.opacity(0.8))
-                        Rectangle().fill(Color.white.opacity(0.3)).frame(height: 1)
+                        Rectangle().fill(Color.white.opacity(0.3)).frame(height: 0.5)
                     }
-                    .padding(.vertical, 15)
+                    .padding(.vertical, AppSpacing.sm)
                     
                     // Social Buttons (Glassmorphism)
-                    VStack(spacing: 15) {
+                    VStack(spacing: AppSpacing.sm) {
                         Button {
                             // Google Login
                         } label: {
-                            HStack(spacing: 15) {
+                            HStack(spacing: AppSpacing.md) {
                                 Image("google_logo")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 24, height: 24)
-                                Text("Continue with Google")
-                                    .font(.customfont(.semibold, fontSize: 18))
+                                    .frame(width: 22, height: 22)
+                                Text("Tiếp tục với Google")
+                                    .font(AppTypography.headline(.semibold))
                                     .foregroundColor(.white)
                             }
-                            .frame(maxWidth: .infinity, minHeight: 60)
-                            .background(.ultraThinMaterial) // Apple native glassmorphism
-                            .cornerRadius(20)
-                            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.2), lineWidth: 1))
+                            .frame(maxWidth: .infinity, minHeight: 56)
+                            .glassMorphism(radius: AppRadius.xl)
                         }
                         
                         Button {
                             // Facebook Login
                         } label: {
-                            HStack(spacing: 15) {
+                            HStack(spacing: AppSpacing.md) {
                                 Image("fb_logo")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 24, height: 24)
-                                Text("Continue with Facebook")
-                                    .font(.customfont(.semibold, fontSize: 18))
+                                    .frame(width: 22, height: 22)
+                                Text("Tiếp tục với Facebook")
+                                    .font(AppTypography.headline(.semibold))
                                     .foregroundColor(.white)
                             }
-                            .frame(maxWidth: .infinity, minHeight: 60)
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(20)
-                            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.2), lineWidth: 1))
+                            .frame(maxWidth: .infinity, minHeight: 56)
+                            .glassMorphism(radius: AppRadius.xl)
                         }
                     }
                 }
-                .padding(.horizontal, 30)
+                .padding(.horizontal, AppSpacing.xxl)
                 .padding(.bottom, .bottomInsets + 40)
             }
         }
@@ -126,4 +126,3 @@ struct SignInView: View {
 #Preview {
     SignInView()
 }
-

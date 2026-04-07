@@ -9,8 +9,8 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
+@MainActor
 class FavoritesViewModel: ObservableObject {
-    static let shared = FavoritesViewModel()
     
     @Published var favoriteItems: [ProductModel] = []
     @Published var isLoading = false
@@ -18,6 +18,14 @@ class FavoritesViewModel: ObservableObject {
     @Published var errorMessage = ""
     
     private let db = Firestore.firestore()
+    
+    var isEmpty: Bool {
+        favoriteItems.isEmpty
+    }
+    
+    var count: Int {
+        favoriteItems.count
+    }
     
     init() {
         fetchFavorites()
@@ -32,6 +40,7 @@ class FavoritesViewModel: ObservableObject {
     // MARK: - Toggle Favorite
     
     func toggleFavorite(product: ProductModel) {
+        AppHaptics.impact(.medium)
         if isFavorite(product: product) {
             removeFavorite(product: product)
         } else {
@@ -44,7 +53,9 @@ class FavoritesViewModel: ObservableObject {
     private func addFavorite(product: ProductModel) {
         // Add locally first for instant UI feedback
         if !favoriteItems.contains(where: { $0.id == product.id }) {
-            favoriteItems.append(product)
+            withAnimation(AppAnimation.spring) {
+                favoriteItems.append(product)
+            }
         }
         
         // Sync to Firestore
@@ -83,7 +94,10 @@ class FavoritesViewModel: ObservableObject {
     // MARK: - Remove Favorite
     
     func removeFavorite(product: ProductModel) {
-        favoriteItems.removeAll { $0.id == product.id }
+        AppHaptics.impact(.light)
+        withAnimation(AppAnimation.spring) {
+            favoriteItems.removeAll { $0.id == product.id }
+        }
         
         guard let userId = Auth.auth().currentUser?.uid else { return }
         
@@ -107,7 +121,7 @@ class FavoritesViewModel: ObservableObject {
             .collection("items")
             .order(by: "added_at", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     self?.isLoading = false
                     
                     if let error = error {

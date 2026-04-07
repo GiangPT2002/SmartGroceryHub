@@ -9,8 +9,8 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
+@MainActor
 class OrderViewModel: ObservableObject {
-    static let shared = OrderViewModel()
     
     @Published var orders: [OrderModel] = []
     @Published var isLoading = false
@@ -18,6 +18,14 @@ class OrderViewModel: ObservableObject {
     @Published var errorMessage = ""
     
     private let db = Firestore.firestore()
+    
+    var isEmpty: Bool {
+        orders.isEmpty
+    }
+    
+    var totalOrders: Int {
+        orders.count
+    }
     
     // MARK: - Place Order from Cart
     
@@ -28,7 +36,7 @@ class OrderViewModel: ObservableObject {
             [
                 "name": item.product.name,
                 "image": item.product.image,
-                "price": item.product.offerPrice ?? item.product.price,
+                "price": item.product.displayPrice,
                 "qty": item.qty,
                 "product_id": item.product.id
             ]
@@ -63,7 +71,7 @@ class OrderViewModel: ObservableObject {
             .collection("items")
             .order(by: "created_at", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     self?.isLoading = false
                     
                     if let error = error {

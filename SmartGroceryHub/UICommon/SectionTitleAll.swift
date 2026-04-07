@@ -9,25 +9,35 @@ import SwiftUI
 
 struct SectionTitleAll: View {
     
-    @State var title: String = "Title"
-    @State var titleAll: String = "Xem tất cả"
-    var didTap: (()->())?
+    var title: String = "Title"
+    var titleAll: String = "Xem tất cả"
+    var icon: String? = nil
+    var didTap: (() -> ())?
     
     var body: some View {
-        
-        HStack{
+        HStack(spacing: AppSpacing.xs) {
+            if let icon = icon {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(AppColors.primaryGradient)
+            }
+            
             Text(title)
-                .font(.customfont(.semibold, fontSize: 24))
-                .foregroundColor(.primaryText)
+                .font(AppTypography.title2(.bold))
+                .foregroundColor(AppColors.textPrimary)
             
             Spacer()
             
             Button {
                 didTap?()
             } label: {
-                Text(titleAll)
-                    .font(.customfont(.semibold, fontSize: 16))
-                    .foregroundColor(.primaryApp)
+                HStack(spacing: 4) {
+                    Text(titleAll)
+                        .font(AppTypography.subheadline(.semibold))
+                    Image(systemName: AppIcons.forward)
+                        .font(.system(size: 12, weight: .bold))
+                }
+                .foregroundColor(AppColors.primary)
             }
         }
         .frame(height: 40)
@@ -35,6 +45,6 @@ struct SectionTitleAll: View {
 }
 
 #Preview {
-    SectionTitleAll()
+    SectionTitleAll(title: "Ưu đãi", icon: "flame.fill")
         .padding(20)
 }

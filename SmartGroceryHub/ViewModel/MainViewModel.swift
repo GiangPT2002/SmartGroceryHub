@@ -8,8 +8,8 @@
 import SwiftUI
 import FirebaseAuth
 
+@MainActor
 class MainViewModel: ObservableObject {
-    static var shared: MainViewModel = MainViewModel()
     
     @Published var txtUsername: String = ""
     @Published var txtEmail: String = ""
@@ -22,14 +22,16 @@ class MainViewModel: ObservableObject {
     @Published var isUserLogin: Bool = false
     @Published var userObj: UserModel = UserModel()
     
-    var firebaseService: FirebaseServiceProvider = FirebaseService.shared
+    var firebaseService: FirebaseServiceProvider
     
     private var authStateListener: AuthStateDidChangeListenerHandle?
     
-    init() {
+    init(firebaseService: FirebaseServiceProvider = FirebaseService.shared) {
+        self.firebaseService = firebaseService
+        
         // Listen for Firebase Auth state changes
         authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 if let user = user {
                     self?.userObj = UserModel(firebaseUser: user)
                     self?.isUserLogin = true
@@ -58,13 +60,13 @@ class MainViewModel: ObservableObject {
     func serviceCallLogin() {
         
         if(!txtEmail.isValidEmail) {
-            self.errorMessage = "vui lòng nhập địa chỉ email hợp lệ"
+            self.errorMessage = "Vui lòng nhập địa chỉ email hợp lệ"
             self.showError = true
             return
         }
         
         if(txtPassword.isEmpty) {
-            self.errorMessage = "vui lòng nhập mật khẩu hợp lệ"
+            self.errorMessage = "Vui lòng nhập mật khẩu hợp lệ"
             self.showError = true
             return
         }
@@ -78,21 +80,18 @@ class MainViewModel: ObservableObject {
                     password: txtPassword
                 )
                 
-                // Fetch additional user data from Firestore
                 let userData = try await self.firebaseService.fetchUserData(uid: user.uid)
                 
-                await MainActor.run {
-                    self.userObj = UserModel(firebaseUser: user, userData: userData)
-                    self.isUserLogin = true
-                    self.isLoading = false
-                    self.clearInputFields()
-                }
+                self.userObj = UserModel(firebaseUser: user, userData: userData)
+                self.isUserLogin = true
+                self.isLoading = false
+                self.clearInputFields()
+                AppHaptics.notification(.success)
             } catch {
-                await MainActor.run {
-                    self.errorMessage = self.firebaseErrorMessage(error)
-                    self.showError = true
-                    self.isLoading = false
-                }
+                self.errorMessage = self.firebaseErrorMessage(error)
+                self.showError = true
+                self.isLoading = false
+                AppHaptics.notification(.error)
             }
         }
     }
@@ -102,25 +101,25 @@ class MainViewModel: ObservableObject {
     func serviceCallSignUp() {
         
         if(txtUsername.isEmpty) {
-            self.errorMessage = "vui lòng nhập tên hợp lệ"
+            self.errorMessage = "Vui lòng nhập tên hợp lệ"
             self.showError = true
             return
         }
         
         if(!txtEmail.isValidEmail) {
-            self.errorMessage = "vui lòng nhập địa chỉ email hợp lệ"
+            self.errorMessage = "Vui lòng nhập địa chỉ email hợp lệ"
             self.showError = true
             return
         }
         
         if(txtPassword.isEmpty) {
-            self.errorMessage = "vui lòng nhập mật khẩu hợp lệ"
+            self.errorMessage = "Vui lòng nhập mật khẩu hợp lệ"
             self.showError = true
             return
         }
         
         if(txtPassword.count < 6) {
-            self.errorMessage = "mật khẩu phải có ít nhất 6 ký tự"
+            self.errorMessage = "Mật khẩu phải có ít nhất 6 ký tự"
             self.showError = true
             return
         }
@@ -135,18 +134,16 @@ class MainViewModel: ObservableObject {
                     username: txtUsername
                 )
                 
-                await MainActor.run {
-                    self.userObj = UserModel(firebaseUser: user)
-                    self.isUserLogin = true
-                    self.isLoading = false
-                    self.clearInputFields()
-                }
+                self.userObj = UserModel(firebaseUser: user)
+                self.isUserLogin = true
+                self.isLoading = false
+                self.clearInputFields()
+                AppHaptics.notification(.success)
             } catch {
-                await MainActor.run {
-                    self.errorMessage = self.firebaseErrorMessage(error)
-                    self.showError = true
-                    self.isLoading = false
-                }
+                self.errorMessage = self.firebaseErrorMessage(error)
+                self.showError = true
+                self.isLoading = false
+                AppHaptics.notification(.error)
             }
         }
     }
@@ -158,6 +155,7 @@ class MainViewModel: ObservableObject {
             try self.firebaseService.signOut()
             self.userObj = UserModel()
             self.isUserLogin = false
+            AppHaptics.notification(.success)
         } catch {
             self.errorMessage = "Không thể đăng xuất. Vui lòng thử lại."
             self.showError = true

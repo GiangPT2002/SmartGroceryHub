@@ -8,145 +8,119 @@
 import SwiftUI
 
 struct AboutView: View {
-    @Environment(\.presentationMode) var mode: Binding<PresentationMode>
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
         ZStack {
-            Color(hex: "F8F9FA").ignoresSafeArea()
+            AppColors.background.ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button {
-                        mode.wrappedValue.dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(.primaryText)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: AppSpacing.xxl) {
+                    
+                    // App Icon & Name
+                    VStack(spacing: AppSpacing.md) {
+                        Image("app_logo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .cornerRadius(AppRadius.lg)
+                            .shadow(color: AppShadow.elevated.color, radius: AppShadow.elevated.radius, x: 0, y: 4)
+                        
+                        Text("Smart Grocery Hub")
+                            .font(AppTypography.title1(.bold))
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Text("Phiên bản 2.0.0")
+                            .font(AppTypography.callout(.medium))
+                            .foregroundColor(AppColors.textSecondary)
+                            .padding(.horizontal, AppSpacing.md)
+                            .padding(.vertical, AppSpacing.xxs)
+                            .background(AppColors.surfaceSecondary)
+                            .cornerRadius(AppRadius.pill)
                     }
+                    .padding(.top, AppSpacing.xxl)
                     
-                    Spacer()
-                    
-                    Text("Giới thiệu")
-                        .font(.customfont(.bold, fontSize: 22))
-                        .foregroundColor(.primaryText)
-                    
-                    Spacer()
-                    
-                    Color.clear.frame(width: 25, height: 25)
-                }
-                .padding(.top, .topInsets + 10)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 15)
-                .background(Color.white)
-                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
-                
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 30) {
-                        // App Logo & Version
-                        VStack(spacing: 15) {
-                            Image("app_logo")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 80, height: 80)
-                            
-                            Text("Smart Grocery Hub")
-                                .font(.customfont(.bold, fontSize: 24))
-                                .foregroundColor(.primaryText)
-                            
-                            Text("Phiên bản 1.0.0")
-                                .font(.customfont(.medium, fontSize: 15))
-                                .foregroundColor(.secondaryText)
-                        }
-                        .padding(.top, 40)
+                    // Features
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        Text("Tính năng nổi bật")
+                            .font(AppTypography.title3(.bold))
+                            .foregroundColor(AppColors.textPrimary)
                         
-                        // Description
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Về ứng dụng")
-                                .font(.customfont(.bold, fontSize: 18))
-                                .foregroundColor(.primaryText)
-                            
-                            Text("Smart Grocery Hub là ứng dụng mua sắm thực phẩm thông minh, giúp bạn dễ dàng khám phá, lựa chọn và đặt mua các sản phẩm tươi ngon với giá tốt nhất.")
-                                .font(.customfont(.medium, fontSize: 15))
-                                .foregroundColor(.secondaryText)
-                                .lineSpacing(4)
-                        }
-                        .padding(20)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.white)
-                        .cornerRadius(20)
-                        .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
-                        .padding(.horizontal, 20)
-                        
-                        // Features
-                        VStack(alignment: .leading, spacing: 15) {
-                            Text("Tính năng nổi bật")
-                                .font(.customfont(.bold, fontSize: 18))
-                                .foregroundColor(.primaryText)
-                            
-                            FeatureRow(icon: "cart.fill", title: "Giỏ hàng thông minh", color: Color(hex: "53B175"))
-                            FeatureRow(icon: "heart.fill", title: "Danh sách yêu thích", color: Color(hex: "E74C3C"))
-                            FeatureRow(icon: "magnifyingglass", title: "Tìm kiếm nhanh chóng", color: Color(hex: "3498DB"))
-                            FeatureRow(icon: "bag.fill", title: "Theo dõi đơn hàng", color: Color(hex: "F39C12"))
-                            FeatureRow(icon: "lock.shield.fill", title: "Thanh toán bảo mật", color: Color(hex: "9B59B6"))
-                        }
-                        .padding(20)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.white)
-                        .cornerRadius(20)
-                        .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
-                        .padding(.horizontal, 20)
-                        
-                        // Developer
-                        VStack(spacing: 10) {
-                            Text("Phát triển bởi")
-                                .font(.customfont(.medium, fontSize: 14))
-                                .foregroundColor(.secondaryText)
-                            
-                            Text("Phạm Trường Giang")
-                                .font(.customfont(.bold, fontSize: 18))
-                                .foregroundColor(.primaryApp)
-                            
-                            Text("© 2025 Smart Grocery Hub")
-                                .font(.customfont(.medium, fontSize: 13))
-                                .foregroundColor(.placeholder)
-                        }
-                        .padding(.top, 10)
-                        .padding(.bottom, 40)
+                        FeatureRow(icon: "cart.fill", title: "Mua sắm thông minh", description: "Tìm kiếm và đặt hàng nhanh chóng", color: AppColors.primary)
+                        FeatureRow(icon: "bolt.fill", title: "Giao hàng nhanh", description: "Nhận hàng tận nơi trong vài giờ", color: AppColors.accent)
+                        FeatureRow(icon: "lock.shield.fill", title: "Bảo mật cao", description: "Dữ liệu được mã hóa an toàn", color: AppColors.info)
+                        FeatureRow(icon: "heart.fill", title: "Cá nhân hóa", description: "Gợi ý sản phẩm theo sở thích", color: AppColors.error)
                     }
+                    .padding(AppSpacing.lg)
+                    .background(AppColors.surface)
+                    .cornerRadius(AppRadius.lg)
+                    .shadow(color: AppShadow.subtle.color, radius: AppShadow.subtle.radius, x: 0, y: 2)
+                    .padding(.horizontal, AppSpacing.lg)
+                    
+                    // Developer Info
+                    VStack(spacing: AppSpacing.md) {
+                        Text("Phát triển bởi")
+                            .font(AppTypography.callout(.medium))
+                            .foregroundColor(AppColors.textSecondary)
+                        
+                        Text("Phạm Trường Giang")
+                            .font(AppTypography.title2(.bold))
+                            .foregroundStyle(AppColors.primaryGradient)
+                        
+                        Text("© 2025 - 2026 Smart Grocery Hub")
+                            .font(AppTypography.caption(.medium))
+                            .foregroundColor(AppColors.textTertiary)
+                    }
+                    .padding(.bottom, AppSpacing.huge)
                 }
             }
         }
-        .ignoresSafeArea(.all, edges: .top)
-        .navigationTitle("")
+        .navigationTitle("Giới thiệu")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
-        .navigationBarHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: AppIcons.back)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(AppColors.textPrimary)
+                }
+            }
+        }
     }
 }
 
 struct FeatureRow: View {
-    var icon: String
-    var title: String
-    var color: Color
+    let icon: String
+    let title: String
+    let description: String
+    let color: Color
     
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: AppSpacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 36, height: 36)
-                .background(color)
-                .cornerRadius(10)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(color)
+                .frame(width: 44, height: 44)
+                .background(color.opacity(0.12))
+                .cornerRadius(AppRadius.sm)
             
-            Text(title)
-                .font(.customfont(.medium, fontSize: 16))
-                .foregroundColor(.primaryText)
-            
-            Spacer()
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(AppTypography.subheadline(.bold))
+                    .foregroundColor(AppColors.textPrimary)
+                Text(description)
+                    .font(AppTypography.footnote(.medium))
+                    .foregroundColor(AppColors.textSecondary)
+            }
         }
     }
 }
 
 #Preview {
-    AboutView()
+    NavigationStack {
+        AboutView()
+    }
 }
